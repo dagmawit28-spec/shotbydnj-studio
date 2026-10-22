@@ -416,6 +416,66 @@
    "verdict": "kept",
    "source": "Canon USA: Photographing snow",
    "source_url": "https://www.usa.canon.com/learning/training-articles/training-articles-list/photographing-snow"
+  },
+  {
+   "id": "t20261021-trail_hike",
+   "date": "Oct 21",
+   "photo": "Trail hike",
+   "technique": "Natural grade + subject-aware blur",
+   "before": "lab/posts/trail_hike.jpg",
+   "after": "lab/posts/trail_hike_t20261021.jpg",
+   "note": "First edit, done live with Dag. Moody grade, carabiner removal and a darker sky were all rejected. What he approved: natural color, greens pulled back, brighter shadows, a light crop keeping Isaiah on the right third, and a gentle background blur that keeps both hikers sharp.",
+   "verdict": "kept",
+   "source": "Live session with Dag",
+   "source_url": ""
+  },
+  {
+   "id": "t20261021-forest_walk",
+   "date": "Oct 21",
+   "photo": "Forest walk",
+   "technique": "4:5 crop, tame sun patches, warm touch",
+   "before": "lab/posts/forest_walk.jpg",
+   "after": "lab/posts/forest_walk_t20261021.jpg",
+   "note": "Cropped vertical with him centered so the trunks frame him. Pulled down the bright sun patches on the bark, brightened the opening behind him, toned down the white towel and added a little warmth. The first try looked hazy, so contrast was added back.",
+   "verdict": "kept",
+   "source": "Live session with Dag",
+   "source_url": ""
+  },
+  {
+   "id": "t20261021-powerline_valley",
+   "date": "Oct 21",
+   "photo": "Powerline valley",
+   "technique": "Natural grade, no blur",
+   "before": "lab/posts/powerline_valley.jpg",
+   "after": "lab/posts/powerline_valley_t20261021.jpg",
+   "note": "Opened up the shadows a little and kept the sun flare. Background blur was tried and dropped: on a backlit valley it made the whole shot look hazy and washed out.",
+   "verdict": "kept",
+   "source": "Live session with Dag",
+   "source_url": ""
+  },
+  {
+   "id": "t20261021-portrait_man",
+   "date": "Oct 21",
+   "photo": "Portrait (man)",
+   "technique": "Light skin retouch",
+   "before": "lab/posts/portrait_man.jpg",
+   "after": "lab/posts/portrait_man_t20261021.jpg",
+   "note": "Softened forehead lines and the wrinkles around his eyes and cheeks with frequency separation, keeping skin texture. Eyes, brows, beard and expression untouched.",
+   "verdict": "kept",
+   "source": "Live session with Dag",
+   "source_url": ""
+  },
+  {
+   "id": "t20261021-portrait_woman",
+   "date": "Oct 21",
+   "photo": "Portrait (woman)",
+   "technique": "Retouch + tighter 4:5 crop",
+   "before": "lab/posts/portrait_woman.jpg",
+   "after": "lab/posts/portrait_woman_t20261021.jpg",
+   "note": "Removed the forehead vein and softened wrinkles. First pass smoothed her eyebrows away, which Dag caught; brows are now protected and the smoothing is lighter. Cropped 4:5 to show less fence and tree.",
+   "verdict": "kept",
+   "source": "Live session with Dag",
+   "source_url": ""
   }
  ],
  "playbook": [
