@@ -1,5 +1,5 @@
 // Caches the app so it opens fast and works with a weak signal. Bump VERSION to ship an update.
-const VERSION = 'sbdnj-hq-v15';
+const VERSION = 'sbdnj-hq-v16';
 const CORE = ['./', './index.html', './edit.js', './lab.js', './lab/lab.json', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -8,6 +8,11 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || u.hostname === 'api.anthropic.com') return;
   // the learning log changes every night: always try the network first
   if (u.origin === location.origin && u.pathname.includes('/lab/')) { e.respondWith(fetch(e.request).then(r => { if (r.ok) caches.open(VERSION).then(c => c.put(e.request, r.clone())); return r; }).catch(() => caches.match(e.request, { ignoreSearch: true }))); return; }
+  // App code (pages, scripts, data): network first so updates show on the next open; cache only when offline
+  if (u.origin === location.origin && (e.request.mode === 'navigate' || /\.(html|js|json|webmanifest)$/.test(u.pathname) || u.pathname.endsWith('/'))) {
+    e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(r => { if (r.ok) { const cl = r.clone(); caches.open(VERSION).then(c => c.put(e.request, cl)); } return r; }).catch(() => caches.match(e.request, { ignoreSearch: true })));
+    return;
+  }
   e.respondWith(caches.open(VERSION).then(async c => {
     const hit = await c.match(e.request);
     const net = fetch(e.request).then(r => { if (r.ok && (u.origin === location.origin || u.hostname.endsWith('jsdelivr.net') || u.hostname.endsWith('gstatic.com') || u.hostname.endsWith('googleapis.com'))) c.put(e.request, r.clone()); return r; }).catch(() => hit);
