@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-title" content="DNJ Studio">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}
 #settings{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:grid;place-items:center;padding:16px}
 #settings .sheet{background:#141518;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:16px;width:min(420px,100%);display:flex;flex-direction:column;gap:10px;font-family:"JetBrains Mono",monospace;color:#F1ECE4}
@@ -1635,14 +1636,15 @@ const finMat = new THREE.MeshBasicMaterial({ map: finTex, toneMapped: false });
 const finVideo = document.createElement('video'); finVideo.muted = true; finVideo.loop = true; finVideo.playsInline = true; finVideo.setAttribute('playsinline', '');
 try { const b64 = document.getElementById('finished-data').textContent.trim().split(',')[1]; const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); finVideo.src = URL.createObjectURL(new Blob([u], { type: 'video/mp4' })); } catch (e) { console.warn('finished clip unavailable', e); }
 const tryPlay = () => finVideo.play().catch(() => {}); tryPlay(); window.addEventListener('pointerdown', tryPlay, { once: true });
+let finCustom = null;
 function drawFinished(t) {
-  const g = finCanvas.getContext('2d'), W = finCanvas.width, H = finCanvas.height; const sc = W / 1280; const cycle = t % 40; const photos = cycle > 28;
+  const g = finCanvas.getContext('2d'), W = finCanvas.width, H = finCanvas.height; const sc = W / 1280; const cycle = t % 40; const photos = !finCustom && cycle > 28;
   g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
   if (!photos && finVideo.readyState >= 2) g.drawImage(finVideo, 0, 0, W, H);
   else { const i = Math.floor((photos ? cycle - 28 : t) / 1.5) % FRAMES.n; drawImg(g, FRAMES.g[i], 0, 0, W, H, t, i); }
   const grd = g.createLinearGradient(0, H - 110, 0, H); grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,.75)'); g.fillStyle = grd; g.fillRect(0, H - 110, W, 110);
   g.save(); g.translate(0, H); g.scale(sc, sc); g.fillStyle = '#e8a33d'; g.fillRect(36, -70, 132, 26); g.fillStyle = '#1a1206'; g.font = '700 16px monospace'; g.fillText('FINISHED', 50, -51);
-  g.fillStyle = '#f1ece4'; g.font = '700 30px "Bricolage Grotesque", sans-serif'; g.fillText(photos ? 'Rainier photo set · moody grade' : 'Into the Pines · Rainier hike film', 186, -47); g.restore();
+  g.fillStyle = '#f1ece4'; g.font = '700 30px "Bricolage Grotesque", sans-serif'; g.fillText(photos ? 'Rainier photo set · moody grade' : (finCustom || 'Into the Pines · Rainier hike film'), 186, -47); g.restore();
   finTex.needsUpdate = true;
 }
 // Giant LED wall on the plaza (faces the street)
@@ -1664,7 +1666,7 @@ document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click',
 document.getElementById('sideToggle').addEventListener('click', () => document.getElementById('side').classList.toggle('collapsed'));
 document.getElementById('lblToggle').addEventListener('click', e => { showLabels = !showLabels; e.currentTarget.setAttribute('aria-pressed', String(showLabels)); if (!showLabels) PEOPLE.forEach(p => p.el.style.display = 'none'); });
 if (window.innerWidth <= 860) document.getElementById('side').classList.add('collapsed');
-function renderPane() { if (tab === 'brief') return paneBrief(); if (tab === 'drop') return paneDrop(); paneCrew(); }
+function renderPane() { if (window.__extraTabs?.[tab]) return window.__extraTabs[tab](pane); if (tab === 'brief') return paneBrief(); if (tab === 'drop') return paneDrop(); paneCrew(); }
 function personCard(p) {
   const ks = kudosFor(p.id);
   return `<div class="card" style="border-color:rgba(232,163,61,.5)"><div class="top"><span class="who" style="font-size:14px">${esc(p.name)}</span><button data-close style="padding:3px 8px">Close</button></div>
@@ -1870,8 +1872,9 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight; camera.fov = fovFor(camera.aspect); camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight);
 });
-window.__hq = { setTime, goRoom, enterInside, goOutside, camera, controls, scene, PEOPLE, startTrip: p => startTrip(p), focus: id => focusPerson(PEOPLE.find(p => p.id === id)), get tween() { return tween; } };
+window.__hq = { setTime, goRoom, enterInside, goOutside, camera, controls, scene, PEOPLE, log: (h, r) => log(h, r), setTab: n => { tab = n; renderPane(); }, currentTab: () => tab, showFinished: (url, title) => { finCustom = title || 'New edit'; finVideo.src = url; tryPlay(); }, startTrip: p => startTrip(p), focus: id => focusPerson(PEOPLE.find(p => p.id === id)), get tween() { return tween; } };
 boot();
 </script>
 
+<script type="module" src="edit.js"></script>
 </body></html>
