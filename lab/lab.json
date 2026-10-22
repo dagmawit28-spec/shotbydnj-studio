@@ -767,5 +767,88 @@
    },
    "score": 17
   }
+ ],
+ "hires": [
+  {
+   "id": "goldenhour",
+   "name": "Golden Hour Specialist",
+   "role": "Backlight & sunset shots",
+   "specialty": "golden hour and backlit shots",
+   "hired": "Oct 22",
+   "why": "Hired after the studio found your backlit golden-hour posts get your best sends per view, and studied Nikon's backlighting guide.",
+   "desc": "Knows your signature look: the sun at the edge of the frame, -1 to -2 EV, Daylight or Shade white balance, warm highlights. Runs the Golden hour and Blue hour recipes.",
+   "tasks": [
+    "Checking sun placement on the golf shot",
+    "Dialing -1.5 EV on a backlit test",
+    "Warming highlights on a sunset frame",
+    "Taming a blown-out sun",
+    "Planning a sunrise shot list"
+   ]
+  },
+  {
+   "id": "strategist",
+   "name": "Instagram Strategist",
+   "role": "What's performing & why",
+   "specialty": "Instagram performance",
+   "hired": "Oct 22",
+   "why": "Hired after the studio graded your 9 posts against their views and studied what Instagram says it ranks on.",
+   "desc": "Grades every post on light, exposure, color, composition, story and fit, and compares it to real views, likes per view and sends per view. Pushes carousels with title cards and 4:5 exports.",
+   "tasks": [
+    "Grading the Tetons carousel",
+    "Comparing carousels vs single videos",
+    "Checking sends per view",
+    "Sizing slides to 1080x1350",
+    "Planning a title card for the next trip"
+   ]
+  },
+  {
+   "id": "exposure",
+   "name": "Exposure Specialist",
+   "role": "Snow, sun & bright scenes",
+   "specialty": "tricky exposure",
+   "hired": "Oct 22",
+   "why": "Hired after the studio studied Canon's snow guide and its first glacier test blew the snow out.",
+   "desc": "Handles scenes that fool the camera: snow, bright sky, the sun in frame. Protects highlights and removes color casts without killing texture.",
+   "tasks": [
+    "Protecting snow texture on the glacier shot",
+    "Removing a blue cast",
+    "Reading the histogram on a bright frame",
+    "Pulling highlights on a backlit sky"
+   ]
+  }
+ ],
+ "reports": [
+  {
+   "date": "Oct 22",
+   "headline": "First day: graded your posts, built 6 recipes, hired 3 specialists",
+   "added": [
+    "Golden Hour Specialist",
+    "Instagram Strategist",
+    "Exposure Specialist"
+   ],
+   "learned": [
+    {
+     "title": "Instagram ranks on watch time, likes and sends",
+     "source": "Social Media Today (Instagram's Adam Mosseri)",
+     "url": "https://www.socialmediatoday.com/news/instagram-shares-algorithm-insights-2025/738034/"
+    },
+    {
+     "title": "Backlit golden hour: -1 to -2 EV, Daylight/Shade WB",
+     "source": "Nikon",
+     "url": "https://www.nikon.co.uk/en_GB/learn-and-explore/magazine/tips-and-tricks/make-the-most-of-golden-hour-with-backlighting"
+    },
+    {
+     "title": "Snow reads gray; fix the blue cast",
+     "source": "Canon USA",
+     "url": "https://www.usa.canon.com/learning/training-articles/training-articles-list/photographing-snow"
+    }
+   ],
+   "try": [
+    "Next sunset: put the sun at the edge of the frame, set exposure compensation to -1.5, white balance to Shade. Shoot one at 0 EV too and compare.",
+    "Next trip: shoot 5 frames per place (wide, detail, person, golden hour, closer) and post it as a carousel with a title card.",
+    "In Insights, check likes per reach and sends per reach on your last 3 posts."
+   ],
+   "tested": "Fixed the flat Glacier shot. First try followed Canon's +EV tip and blew the snow white; second try only removed the blue cast and protected the brightest snow. Kept, small gain."
+  }
  ]
 }

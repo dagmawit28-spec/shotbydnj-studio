@@ -74,6 +74,20 @@ function viewLearning() {
   return `
     <div class="card"><span>The studio is always learning. Every night it reads one new technique from a trusted source, practices it on one of your photos, and logs the result. What works goes into the playbook and the recipes.</span>
       <span class="note">${r.length} lessons · ${p.length} practice tests · ${pb.length} in the playbook</span></div>
+    <span class="eyebrow">Studio team · ${(lab.hires || []).length} hired from learning</span>
+    <span class="note">When the studio learns enough in one area, it hires a specialist. You'll see them at the back of the Editing Bullpen.</span>
+    ${(lab.hires || []).map(x => `<div class="card"><div class="top"><span class="who">${esc(x.name)}</span><span class="when">Hired ${esc(x.hired)}</span></div>
+      <span class="note">${esc(x.role)}</span><span>${esc(x.why)}</span></div>`).join('')}
+    <span class="eyebrow">Daily breakdown</span>
+    ${(lab.reports || []).slice(0, 7).map(x => `<div class="card"><div class="top"><span class="who">${esc(x.headline)}</span><span class="when">${esc(x.date)}</span></div>
+      ${x.added?.length ? `<span><b>Hired:</b> ${x.added.map(esc).join(', ')}</span>` : '<span class="note">No new hires</span>'}
+      <span><b>Learned:</b></span>${(x.learned || []).map(l => `<span>· ${esc(l.title)} <span class="note">(${link({ name: l.source, url: l.url })})</span></span>`).join('')}
+      <span><b>Try it yourself:</b></span>${(x.try || []).map(t => `<span>· ${esc(t)}</span>`).join('')}
+      <span><b>How the studio tested it:</b> ${esc(x.tested)}</span></div>`).join('') || '<div class="card"><span class="note">The first breakdown lands after tonight\'s session.</span></div>'}
+    <span class="eyebrow">Studio team · ${(lab.hires || []).length} hired from learning</span>
+    <span class="note">When the studio learns enough in one area, it hires a specialist. They sit in the Learning Lab wing, which grows a new bay every 4 hires.</span>
+    ${(lab.hires || []).map(x => `<div class="card"><div class="top"><span class="who">${esc(x.name)}</span><span class="when">Hired ${esc(x.hired)}</span></div>
+      <span class="note">${esc(x.role)}</span><span>${esc(x.why)}</span></div>`).join('')}
     <span class="eyebrow">Studying</span>
     ${r.map(x => `<div class="card"><div class="top"><span class="who">${esc(x.title)}</span><span class="when">${esc(x.date)}</span></div>
       <span>${esc(x.takeaway)}</span><span class="note">Source: ${link({ name: x.source, url: x.url })}</span></div>`).join('') || '<div class="card"><span class="note">Tonight\'s reading shows here.</span></div>'}

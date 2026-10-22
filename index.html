@@ -159,6 +159,11 @@ button.primary{background:var(--accent);color:var(--accent-ink);border-color:var
 .tag{background:var(--accent);color:var(--accent-ink);border-radius:3px;padding:0 4px;font-size:9.5px;margin-right:4px;font-weight:700;letter-spacing:.06em}
 textarea,input,select{width:100%;box-sizing:border-box;background:rgba(0,0,0,.35);color:var(--ink);border:1px solid var(--edge);border-radius:8px;padding:9px 10px;font:inherit;font-size:12px}
 textarea{resize:vertical;min-height:70px}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px}
+details.grp>summary{cursor:pointer;list-style:none}
+details.grp>summary::-webkit-details-marker{display:none}
+details.grp>summary::before{content:'▸ ';color:var(--muted)}
+details.grp[open]>summary::before{content:'▾ '}
 .card{border:1px solid var(--edge);border-radius:10px;padding:9px 11px;display:flex;flex-direction:column;gap:4px;background:rgba(0,0,0,.25);font-size:12px;line-height:1.5}
 .card .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .card .who{font-weight:700}
@@ -214,6 +219,7 @@ textarea{resize:vertical;min-height:70px}
   <button data-room="board">Boardroom</button>
   <button data-room="rec">Fun / Pool Lounge</button>
   <button data-room="espresso">Espresso Bar</button>
+  <button data-room="lab" hidden>Learning Lab</button>
   <span style="width:1px;height:22px;background:var(--edge)"></span>
   <button id="camEye" aria-pressed="true">Eye level</button>
   <button id="camSec">Security cam</button>
@@ -236,7 +242,7 @@ textarea{resize:vertical;min-height:70px}
 <div id="labels"></div>
 <aside class="rail side" id="side">
   <div class="tabs" role="tablist">
-    <button role="tab" data-tab="crew" aria-selected="true">Crew live</button>
+    <button role="tab" data-tab="crew" aria-selected="true">Crew</button>
     <button role="tab" data-tab="brief" aria-selected="false">Brief the crew</button>
     <button role="tab" data-tab="drop" aria-selected="false">Drop Zone</button>
   </div>
@@ -1500,16 +1506,18 @@ function updateCrew(dt) {
       else { m.position.x += dx / dist * sp; m.position.z += dz / dist * sp; }
     } else if (p.state === 'walk' && !p.path.length) { const f = p.after; p.after = null; f && f(); }
     if (p.state === 'away') { if (p.lookAt) turnTo(m, Math.atan2(p.lookAt[0] - m.position.x, p.lookAt[1] - m.position.z), dt * 4); if (now > p.leaveAt) goHome(p); }
-    if (p.state === 'home' && p.id !== 'dag' && p.id !== 'andy' && now > p.nextTrip) { if (awayCount() < 7 && !briefBusy) startTrip(p); else p.nextTrip = now + 5000; }
+    if (p.state === 'home' && p.id !== 'dag' && p.id !== 'andy' && p.home.node && now > p.nextTrip) { if (awayCount() < 7 && !briefBusy) startTrip(p); else p.nextTrip = now + 5000; }
     if (Math.hypot(m.position.x - DOOR.x, m.position.z - DOOR.z) < 2.0) doorNear = true;
   }
   DOOR.open = THREE.MathUtils.damp(DOOR.open, doorNear ? 1 : 0, 6, dt);
   for (const d of DOOR.panels) d.g.position.x = DOOR.x + d.s * (0.32 + DOOR.open * 0.6);
 }
+const WING = { on: false, x0: 0, x1: 0, z0: 0 };
 function zoneOf(p) { const { x, z } = p.entry.model.position;
+  if (WING.on && x >= WING.x0 && x <= WING.x1 && z < BLD.z0 && z >= WING.z0) return 'lab';
   if (x < BLD.x0 || x > BLD.x1 || z < BLD.z0 || z > BLD.z1) return 'outside';
   if (x >= 2) return z < -1 ? 'boss' : 'board'; if (z > 3) return x < -5 ? 'rec' : 'espresso'; return 'bullpen'; }
-const ZONE_NAME = { outside: 'Outside', boss: "Boss's Office", board: 'Boardroom', rec: 'Fun / Pool Lounge', espresso: 'Espresso Bar', bullpen: 'Editing Bullpen' };
+const ZONE_NAME = { lab: 'Learning Lab', outside: 'Outside', boss: "Boss's Office", board: 'Boardroom', rec: 'Fun / Pool Lounge', espresso: 'Espresso Bar', bullpen: 'Editing Bullpen' };
 
 /* =========================================================================
    KUDOS
@@ -1702,7 +1710,20 @@ document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click',
 document.getElementById('sideToggle').addEventListener('click', () => document.getElementById('side').classList.toggle('collapsed'));
 document.getElementById('lblToggle').addEventListener('click', e => { showLabels = !showLabels; e.currentTarget.setAttribute('aria-pressed', String(showLabels)); if (!showLabels) PEOPLE.forEach(p => p.el.style.display = 'none'); });
 if (window.innerWidth <= 860) document.getElementById('side').classList.add('collapsed');
-function renderPane() { if (window.__extraTabs?.[tab]) return window.__extraTabs[tab](pane); if (tab === 'brief') return paneBrief(); if (tab === 'drop') return paneDrop(); paneCrew(); }
+const SUBTABS = { crew: [['crew', 'Live floor'], ['brief', 'Brief the crew']], edit: [['edit', 'Edit'], ['presets', 'Presets']] };
+const GROUP_OF = { crew: 'crew', brief: 'crew', edit: 'edit', presets: 'edit' };
+function subRow() {
+  const g = GROUP_OF[tab];
+  document.querySelectorAll('.tabs [data-tab]').forEach(b => { const t = b.dataset.tab; if (t === 'brief' || t === 'presets') { b.hidden = true; return; } b.setAttribute('aria-selected', String(t === (g || tab))); });
+  if (!g || pane.firstElementChild?.classList.contains('subtabs')) return;
+  const row = document.createElement('div'); row.className = 'subtabs';
+  row.innerHTML = SUBTABS[g].map(([k, n]) => `<button data-sub="${k}" aria-pressed="${k === tab}">${n}</button>`).join('');
+  row.querySelectorAll('[data-sub]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.sub; renderPane(); }));
+  pane.prepend(row);
+}
+new MutationObserver(() => subRow()).observe(pane, { childList: true });
+function renderPane() { renderPaneInner(); subRow(); }
+function renderPaneInner() { if (window.__extraTabs?.[tab]) return window.__extraTabs[tab](pane); if (tab === 'brief') return paneBrief(); if (tab === 'drop') return paneDrop(); paneCrew(); }
 function personCard(p) {
   const ks = kudosFor(p.id);
   return `<div class="card" style="border-color:rgba(232,163,61,.5)"><div class="top"><span class="who" style="font-size:14px">${esc(p.name)}</span><button data-close style="padding:3px 8px">Close</button></div>
@@ -1717,16 +1738,18 @@ function personCard(p) {
     ${ks.slice(0, 4).map(k => `<span class="note">★ <b>${esc(k.award)}</b>${k.note ? ' · ' + esc(k.note) : ''} · ${esc(ago(k.at))}</span>`).join('')}`}
   </div>`;
 }
+const OPEN_GROUPS = new Set();
 function paneCrew() {
   const groups = {}; PEOPLE.forEach(p => (groups[ZONE_NAME[zoneOf(p)]] ||= []).push(p));
-  const order = ['Editing Bullpen', "Boss's Office", 'Boardroom', 'Espresso Bar', 'Fun / Pool Lounge', 'Outside'];
-  const list = order.filter(g => groups[g]).map(g => `<div class="group">${esc(g)} · ${groups[g].length}</div>` + groups[g].map(p => { const nk = kudosFor(p.id).length; return `<button class="person" data-pid="${esc(p.id)}"><span class="d" style="background:${p.id === 'dag' ? 'var(--accent)' : 'var(--cool)'}"></span><span><b>${esc(p.name)}${nk ? ` <span style="color:var(--accent)">★${nk}</span>` : ''}</b><small>${esc(p.role)}</small><span class="now${performance.now() < p.realUntil ? ' real' : ''}" data-now="${esc(p.id)}">${esc(statusOf(p))}</span></span></button>`; }).join('')).join('');
+  const order = ['Editing Bullpen', 'Learning Lab', "Boss's Office", 'Boardroom', 'Espresso Bar', 'Fun / Pool Lounge', 'Outside'];
+  const list = order.filter(g => groups[g]).map(g => `<details class="grp" data-g="${esc(g)}"${OPEN_GROUPS.has(g) ? ' open' : ''}><summary class="group">${esc(g)} · ${groups[g].length}</summary>` + groups[g].map(p => { const nk = kudosFor(p.id).length; return `<button class="person" data-pid="${esc(p.id)}"><span class="d" style="background:${p.id === 'dag' ? 'var(--accent)' : 'var(--cool)'}"></span><span><b>${esc(p.name)}${nk ? ` <span style="color:var(--accent)">★${nk}</span>` : ''}</b><small>${esc(p.role)}</small><span class="now${performance.now() < p.realUntil ? ' real' : ''}" data-now="${esc(p.id)}">${esc(statusOf(p))}</span></span></button>`; }).join('') + '</details>').join('');
   const sel = selectedId && byId(selectedId);
   pane.innerHTML = `<span class="eyebrow">Live floor</span><h2>What the crew is doing</h2>
     <p class="note">Everyday moves are <b>simulated</b> so the studio feels alive. Briefs are <b>real Claude work</b> and marked REAL. Click anyone to see what they do and give kudos.</p>
     ${sel ? personCard(sel) : ''}
     ${list || '<p class="note">The crew is clocking in…</p>'}
     <span class="eyebrow" style="margin-top:6px">Activity feed</span><div class="feed" id="feed">${feed.map(feedRow).join('')}</div>`;
+  pane.querySelectorAll('details.grp').forEach(d => d.addEventListener('toggle', () => { d.open ? OPEN_GROUPS.add(d.dataset.g) : OPEN_GROUPS.delete(d.dataset.g); }));
   pane.querySelectorAll('[data-pid]').forEach(b => b.addEventListener('click', () => { const p = byId(b.dataset.pid); selectPerson(p); focusPerson(p); }));
   pane.querySelector('[data-close]')?.addEventListener('click', () => { selectedId = null; paneCrew(); });
   pane.querySelector('#kFly')?.addEventListener('click', () => focusPerson(sel));
@@ -1857,6 +1880,36 @@ async function boot() {
     register(spawn(xbot, { xbot: true, hue: 0.75, x: -1.4, z: 5.0, ry: -0.6, clip: 'idle' }), 'qa', 'QA Reviewer', 'Final quality check', 'Espresso Bar', { kind: 'stand', pos: [-1.4, 5.0], ry: -0.6, node: 'e1', clip: 'idle' });
     register(spawn(xbot, { xbot: true, hue: 0.55, x: -10.2, z: 7.6, ry: Math.PI, clip: 'headShake', speed: 0.6 }), 'render', 'Render Agent', 'Exports & render queue', 'Fun / Pool Lounge', { kind: 'stand', pos: [-10.2, 7.6], ry: Math.PI, node: 'rW2', clip: 'headshake' });
     register(spawn(soldier, { x: -13.0, z: -2.4, ry: Math.PI / 2, clip: 'Idle' }), 'producer', 'Producer', 'Keeps every edit moving', 'Editing Bullpen', { kind: 'stand', pos: [-13.0, -2.4], ry: Math.PI / 2, node: 'a0', clip: 'idle' });
+    // LEARNING LAB WING: grows one bay (4 desks) per 4 specialists the studio hires as it learns (lab/lab.json, written nightly)
+    try {
+      const L = await (await fetch('lab/lab.json?t=' + Date.now(), { cache: 'no-store' })).json();
+      const hires = (Array.isArray(L.hires) ? L.hires : []).slice(0, 16);
+      if (hires.length) {
+        const bays = Math.ceil(hires.length / 4), BW = 7, z0 = BLD.z0, z1 = BLD.z0 - 6.2, x0 = BLD.x0, x1 = BLD.x0 + bays * BW;
+        WING.on = true; WING.x0 = x0; WING.x1 = x1; WING.z0 = z1; IN.bounds.z0 = z1 + 0.35;
+        const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, ww = x1 - x0, dd = z0 - z1;
+        box(ww + 0.6, 0.3, dd + 0.3, M.concreteDark, cx, -0.15, cz - 0.15, hq, { cast: false });
+        { const f = new THREE.Mesh(new THREE.PlaneGeometry(ww, dd), M.oakFloor); f.rotation.x = -Math.PI / 2; f.position.set(cx, 0.005, cz); f.receiveShadow = true; hq.add(f); }
+        box(ww + 0.6, 0.32, dd + 0.3, M.concreteDark, cx, BLD.h + 0.16, cz - 0.15, hq);
+        box(ww + 0.6, 0.75, 0.3, M.blackMatte, cx, BLD.h + 0.37, z1 - 0.15, hq);
+        curtainWall(x0, z1, x1, z1); curtainWall(x0, z0, x0, z1); curtainWall(x1, z1, x1, z0);
+        for (const [x, z] of [[x0, z1], [x1, z1], [x1, z0]]) box(0.4, BLD.h + 0.7, 0.4, M.steel, x, (BLD.h + 0.7) / 2, z, hq);
+        { const c = makeCanvas(1024, 128), g = c.getContext('2d'); g.fillStyle = '#0b0c0e'; g.fillRect(0, 0, 1024, 128); g.fillStyle = '#E8A33D'; g.font = '700 64px system-ui, sans-serif'; g.textBaseline = 'middle'; g.fillText('LEARNING LAB', 36, 66); g.fillStyle = '#9aa4b2'; g.font = '500 34px system-ui, sans-serif'; g.fillText(hires.length + ' specialists hired from what the studio learned', 470, 68);
+          const m = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 0.8), new THREE.MeshBasicMaterial({ map: tex(c), toneMapped: false })); m.position.set(x0 + 3.6, 2.9, z1 + 0.1); hq.add(m); }
+        hires.forEach((hh, i) => {
+          const bay = Math.floor(i / 4), j = i % 4, bx0 = x0 + bay * BW, x = bx0 + 1.1 + j * 1.6, dz = z1 + 2.3;
+          if (j === 0) { roundedBox(BW - 0.8, 0.045, 0.85, 0.012, M.walnut, bx0 + BW / 2, 0.745, dz, hq); for (const s of [-1, 1]) box(0.08, 0.7, 0.08, M.steel, bx0 + BW / 2 + s * (BW / 2 - 0.6), 0.36, dz, hq); }
+          box(0.62, 0.38, 0.03, M.blackMatte, x, 1.02, dz - 0.25, hq); box(0.56, 0.32, 0.01, M.glass, x, 1.02, dz - 0.233, hq);
+          officeChair(x, dz + 0.78, 0);
+          const id = 'hire_' + String(hh.id || i).replace(/[^a-z0-9_]/gi, '').slice(0, 40); if (byId(id)) return;
+          POOLS[id] = (Array.isArray(hh.tasks) && hh.tasks.length ? hh.tasks : ['Studying ' + (hh.specialty || 'new techniques')]).slice(0, 8).map(t => String(t).slice(0, 90));
+          DESC[id] = String(hh.desc || '').slice(0, 300);
+          register(spawn(xbot, { xbot: true, hue: (0.13 + i * 0.17) % 1, x, y: -0.47, z: dz + 0.73, ry: Math.PI, clip: 'idle', sit: true, typing: i % 3 !== 2, phones: i % 2 === 1, speed: 0.8 }), id, String(hh.name || 'New hire').slice(0, 40), String(hh.role || 'Specialist').slice(0, 60), 'Learning Lab', { kind: 'seat', seat: [x, dz + 0.73], y: -0.47, ry: Math.PI, node: null });
+        });
+        const rb = document.querySelector('[data-room="lab"]'); if (rb) rb.hidden = false;
+        ROOMS.lab = { eye: [[x0 + 1.2, 1.62, z0 - 0.6], [x1 - 1.5, 1.0, z1 + 2.2]], sec: [[x1 - 0.6, 3.0, z0 - 0.5], [x0 + 2, 0.5, z1 + 2]] };
+      }
+    } catch (e) { console.warn('learning lab', e); }
     PEOPLE.forEach((p, i) => { p.until = performance.now() + 1500 + i * 700; nextActivity(p, true); p.nextTrip = performance.now() + (p.id === 'producer' ? 3000 : 6000 + i * 2600 + Math.random() * 8000); });
     log('<b>Studio</b> lights on, ' + PEOPLE.length + ' people in the building');
   } catch (err) {
