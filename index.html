@@ -89,6 +89,10 @@
   window.__openSettings = openSettings;
   document.addEventListener('DOMContentLoaded', () => {
     const row = document.querySelector('.time .row'); if (row) { const b = document.createElement('button'); b.textContent = '⚙ Settings'; b.onclick = () => openSettings(); row.appendChild(b); }
+    const brand = document.querySelector('.brand .row'); if (brand) { const sb = document.createElement('button'); sb.textContent = 'Share app'; brand.appendChild(sb);
+      sb.onclick = async () => { const url = location.origin + location.pathname.replace(/index\.html$/, ''); const data = { title: 'ShotByDNJ Studio HQ', text: 'Check out the @shotbydnj studio. Open it, then Add to Home Screen.', url };
+        try { if (navigator.share) { await navigator.share(data); return; } } catch (e) { if (e?.name === 'AbortError') return; }
+        try { await navigator.clipboard.writeText(url); sb.textContent = 'Link copied'; } catch { prompt('Copy this link', url); } setTimeout(() => sb.textContent = 'Share app', 2500); }; }
   });
   if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 })();
