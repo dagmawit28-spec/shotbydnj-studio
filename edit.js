@@ -71,6 +71,7 @@ function kindOf(name) { const e = (name.split('.').pop() || '').toLowerCase(); i
 const KIND_LABEL = { lut: 'LUT', xmp: 'Lightroom', font: 'Font', audio: 'Sound', video: 'Overlay / video', image: 'Image', project: 'Preset / project', other: 'File' };
 function lookOptions() { return [['moody', 'Moody (house)'], ['clean', 'Clean (house)'], ['warm', 'Warm (house)'], ...PRESETS.filter(p => p.kind === 'lut').map(p => ['lut:' + p.id, 'LUT · ' + p.name]), ...PRESETS.filter(p => p.kind === 'xmp').map(p => ['xmp:' + p.id, 'Preset · ' + p.name]), ...METHODS.filter(m => m.look).map(m => ['method:' + m.id, 'Method · ' + m.title])]; }
 async function resolveLook(key) {
+  if (key && typeof key === 'object') return { look: safeLook(key), lut: null, expo: Number.isFinite(+key.expo) ? clamp(+key.expo, 0.7, 1.4) : 1, auto: false, name: String(key.name || 'Recipe') };
   if (LOOKS[key]) return { look: LOOKS[key], lut: null, expo: 1, name: key };
   const [kind, id] = String(key).split(':');
   try {
@@ -382,7 +383,7 @@ async function gradePhoto(file, lookKey) {
   const c = document.createElement('canvas'); c.width = W; c.height = Hh; const R = makeGL(c); R.upload(0, img); if (RL.lut) R.setLUT(RL.lut);
   // exposure balance from a tiny thumbnail
   const t = document.createElement('canvas'); t.width = 64; t.height = 64; const tg = t.getContext('2d'); tg.drawImage(img, 0, 0, 64, 64); const d = tg.getImageData(0, 0, 64, 64).data; let m = 0; for (let i = 0; i < d.length; i += 4) m += (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255; m /= 4096;
-  R.draw({ look: RL.look, lutMix: RL.lut ? 1 : 0, mix: 0, gainA: clamp(0.47 / Math.max(0.08, m), 0.8, 1.3) * RL.expo, gainB: 1, scA: [1, 1], ofA: [0, 0], scB: [1, 1], ofB: [0, 0], bars: 0, fade: 0, time: 1, grain: (RL.look.grain || 0.02) * 0.6 });
+  R.draw({ look: RL.look, lutMix: RL.lut ? 1 : 0, mix: 0, gainA: (RL.auto === false ? 1 : clamp(0.47 / Math.max(0.08, m), 0.8, 1.3)) * RL.expo, gainB: 1, scA: [1, 1], ofA: [0, 0], scB: [1, 1], ofB: [0, 0], bars: 0, fade: 0, time: 1, grain: (RL.look.grain || 0.02) * 0.6 });
   // 4:5 feed crop (center)
   const fw = Math.min(W, Math.round(Hh * 0.8)), fh = Math.round(fw * 1.25) > Hh ? Hh : Math.round(fw * 1.25);
   const crop = document.createElement('canvas'); crop.width = Math.min(1080, fw); crop.height = Math.round(crop.width * 1.25); crop.getContext('2d').drawImage(c, (W - fw) / 2, (Hh - fh) / 2, fw, fh, 0, 0, crop.width, crop.height);
@@ -640,4 +641,4 @@ export async function presetsPane(pane) {
   await loadLibrary();
   if (state.finished[0]?.kind === 'video') H()?.showFinished?.(URL.createObjectURL(state.finished[0].blob), state.finished[0].title);
 })();
-window.__edit = { gradePhoto, resolveLook, parseXMP };
+window.__edit = { gradePhoto, resolveLook, parseXMP, shareOrSave };

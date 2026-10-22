@@ -1,0 +1,711 @@
+{
+ "updated": "2026-10-22T07:30:00Z",
+ "style": [
+  "Natural, high-quality look. Never dark, moody or cinematic unless Dag asks.",
+  "Keep greens true to life. Vivid is fine, neon or fake-looking is not.",
+  "Don't darken the sky.",
+  "Keep Dag's composition. Light crops only, and keep the subject on the third he framed it on.",
+  "Leave real details alone (carabiners, gear). Only remove what Dag asks to remove.",
+  "Retouching stays light: soften wrinkles and veins, keep skin texture, never touch eyebrows, eyes or lips.",
+  "Brighten harsh shadows a little and keep highlights from blowing out.",
+  "Background blur stays subtle and natural, never a cutout or portrait-mode look."
+ ],
+ "gear": "Canon camera (stock lens, no ND filter assumed) and iPhone. Lightroom on phone. No lights or gimbal.",
+ "profile": {
+  "summary": "You shoot travel and the outdoors, usually a person seen from behind facing a big view, often backlit at sunrise or golden hour. Your best numbers come from named places posted as carousels with a title card.",
+  "signature": [
+   "People from behind looking at the view (Golden Hours, #blue, Rainier, the trail and forest photos)",
+   "Backlit sunrise and golden-hour light with the sun in frame",
+   "Named places: Tetons, Vancouver, LA, Miami",
+   "Warm highlights, either natural or a faded film look"
+  ],
+  "findings": [
+   {
+    "text": "Carousels averaged about 3,900 views. Single videos averaged about 2,100. That's roughly 1.8x.",
+    "basis": "Your 9 posts. Small sample, different places and dates, so treat it as a lean, not a rule."
+   },
+   {
+    "text": "Place-name title cards (Tetons, LA) are in your top 4 by views.",
+    "basis": "Your posts"
+   },
+   {
+    "text": "Golden-hour and backlit posts get the most sends per view (Golden Hours 0.26%, Miami 0.20%). Sends are one of Instagram's top three ranking signals.",
+    "basis": "Your posts + Mosseri via Social Media Today",
+    "url": "https://www.socialmediatoday.com/news/instagram-shares-algorithm-insights-2025/738034/"
+   },
+   {
+    "text": "Your lowest post (Glacier) is also your flattest: lowest color (0.10) and lowest contrast of all 8 measured.",
+    "basis": "Measured from your post images"
+   },
+   {
+    "text": "Tetons got 2.3% likes per view, your best. Big, clear, layered landscape plus a title.",
+    "basis": "Your posts"
+   }
+  ],
+  "limits": [
+   "No ND filter: in bright daylight video, use the 180° rule anyway (1/50 at 24fps) and close the aperture, or shoot near golden hour when light is lower.",
+   "Sun in frame blows out on your Canon: expose for the sky (-1 to -2 EV) and lift the shadows in edit.",
+   "Phone edits: every recipe below is done in Lightroom mobile or in the app's Apply button."
+  ]
+ },
+ "rubric": [
+  {
+   "key": "light",
+   "name": "Light",
+   "what": "Direction and quality. Backlit, side, or golden-hour light scores high. Flat midday or overcast scores low.",
+   "source": {
+    "name": "Nikon: Golden hour with backlighting",
+    "url": "https://www.nikon.co.uk/en_GB/learn-and-explore/magazine/tips-and-tricks/make-the-most-of-golden-hour-with-backlighting"
+   }
+  },
+  {
+   "key": "exposure",
+   "name": "Exposure",
+   "what": "No blown sun or sky, no crushed blacks where detail matters.",
+   "source": {
+    "name": "Canon USA: Photographing snow",
+    "url": "https://www.usa.canon.com/learning/training-articles/training-articles-list/photographing-snow"
+   }
+  },
+  {
+   "key": "color",
+   "name": "Color",
+   "what": "One clear, cohesive palette. Subtle grading: a little goes a long way.",
+   "source": {
+    "name": "Adobe: Introducing Color Grading",
+    "url": "https://blog.adobe.com/en/publish/2020/10/20/introducing-color-grading"
+   }
+  },
+  {
+   "key": "composition",
+   "name": "Composition",
+   "what": "Clear subject, leading lines, layers front to back, a level horizon.",
+   "source": null
+  },
+  {
+   "key": "story",
+   "name": "Story",
+   "what": "You can tell where this is and why it matters: a named place, a person, a moment.",
+   "source": null
+  },
+  {
+   "key": "fit",
+   "name": "Instagram fit",
+   "what": "4:5 feed size, carousel or Reel, built to earn likes and sends per view.",
+   "source": {
+    "name": "Social Media Today (Instagram's Adam Mosseri)",
+    "url": "https://www.socialmediatoday.com/news/instagram-shares-algorithm-insights-2025/738034/"
+   }
+  }
+ ],
+ "recipes": [
+  {
+   "id": "house",
+   "name": "Natural (house look)",
+   "when": "Most hikes and trips. What you picked on Oct 21.",
+   "doing_well": "Tetons and Seaplanes, your top 2, are both natural color.",
+   "shoot": [
+    "Shoot the light, not just the view: morning or late afternoon beats noon.",
+    "Keep the person on a third and let the trail or road lead to them.",
+    "Expose so the sky isn't white; you can lift shadows later."
+   ],
+   "edit": [
+    "Shadows +15 to +25, Highlights -20.",
+    "Vibrance +10, Saturation 0. Pull Green saturation -5 if it looks neon.",
+    "Texture +10, Clarity +5. Crop 4:5."
+   ],
+   "why": "Adobe's color grading guide: small moves have a strong effect.",
+   "source": {
+    "name": "Adobe: Introducing Color Grading",
+    "url": "https://blog.adobe.com/en/publish/2020/10/20/introducing-color-grading"
+   },
+   "look": {
+    "name": "Natural",
+    "contrast": 0.08,
+    "sat": 1.03,
+    "warm": 0.012,
+    "lift": 0.02,
+    "roll": 0.05,
+    "sh": [
+     0,
+     0,
+     0
+    ],
+    "hi": [
+     0,
+     0,
+     0
+    ],
+    "grain": 0.01,
+    "expo": 1.04
+   }
+  },
+  {
+   "id": "golden",
+   "name": "Golden hour backlight",
+   "when": "Sunrise, sunset, someone facing the sun. Your signature.",
+   "doing_well": "Golf, #blue, Golden Hours and Rainier all use it. Golden Hours has your best sends per view.",
+   "shoot": [
+    "Put the sun just off the person's head or at the frame edge.",
+    "Dial exposure compensation -1 to -2 so the sky keeps color.",
+    "White balance Daylight or Shade (not Auto) to keep the warmth.",
+    "Hide part of the sun behind a tree or the person to control flare."
+   ],
+   "edit": [
+    "Temp +5 to +10, Highlights -30, Shadows +20.",
+    "Color Grading: Highlights toward orange, saturation 10-15.",
+    "Brush the sun area -0.3 exposure so it isn't a white hole."
+   ],
+   "why": "Nikon's backlighting guide: -1 to -2 EV, Daylight/Shade WB, nudge temperature warmer in post.",
+   "source": {
+    "name": "Nikon: Golden hour with backlighting",
+    "url": "https://www.nikon.co.uk/en_GB/learn-and-explore/magazine/tips-and-tricks/make-the-most-of-golden-hour-with-backlighting"
+   },
+   "look": {
+    "name": "Golden hour",
+    "contrast": 0.11,
+    "sat": 1.05,
+    "warm": 0.035,
+    "lift": 0.025,
+    "roll": 0.09,
+    "sh": [
+     0.006,
+     0.002,
+     -0.004
+    ],
+    "hi": [
+     0.018,
+     0.009,
+     -0.012
+    ],
+    "grain": 0.015,
+    "expo": 1.0
+   }
+  },
+  {
+   "id": "cinematic",
+   "name": "Cinematic",
+   "when": "Reels and short films where you want a movie feel.",
+   "doing_well": "Golf's warm-highlight, cool-shadow grade is your closest so far.",
+   "shoot": [
+    "Film 24fps at 1/50 shutter (the 180° rule) for natural motion blur.",
+    "Without an ND filter, shoot near golden hour so you can keep 1/50.",
+    "Slow, steady moves: walk slow, pan slow, hold each shot 3-5 seconds."
+   ],
+   "edit": [
+    "HSL: Blue hue left, Aqua hue right (teal).",
+    "Color Grading: Highlights toward orange, Shadows toward teal. Keep saturation low (5-15).",
+    "For video, add 2.39 bars only on widescreen cuts, never on Reels."
+   ],
+   "why": "Tuts+ orange-and-teal steps, the 180° rule for motion, and Adobe's warning to keep grades subtle.",
+   "source": {
+    "name": "Envato Tuts+: Orange and teal look in Lightroom",
+    "url": "https://photography.tutsplus.com/tutorials/how-to-create-the-orange-and-teal-look-in-photos-with-lightroom-classic-diy-style-preset--cms-36646"
+   },
+   "also": [
+    {
+     "name": "Australian Photography: The 180 degree shutter rule",
+     "url": "https://www.australianphotography.com/photo-tips/video-tips-the-180-degree-shutter-rule"
+    },
+    {
+     "name": "Adobe: Introducing Color Grading",
+     "url": "https://blog.adobe.com/en/publish/2020/10/20/introducing-color-grading"
+    }
+   ],
+   "look": {
+    "name": "Cinematic",
+    "contrast": 0.14,
+    "sat": 0.97,
+    "warm": 0.008,
+    "lift": 0.03,
+    "roll": 0.08,
+    "sh": [
+     -0.008,
+     0.003,
+     0.014
+    ],
+    "hi": [
+     0.016,
+     0.007,
+     -0.01
+    ],
+    "grain": 0.025,
+    "expo": 0.98
+   }
+  },
+  {
+   "id": "travel",
+   "name": "Travel carousel",
+   "when": "Any named place. Your best format.",
+   "doing_well": "Tetons (5.3K) and LA (3K) both open with a place-name title card.",
+   "shoot": [
+    "Get 5 shots per place: a wide establishing shot, a detail, a person in the scene, a golden-hour shot, and a closer.",
+    "Leave empty sky or wall in the first shot for the title.",
+    "Shoot vertical or leave room to crop 4:5."
+   ],
+   "edit": [
+    "Slide 1: title card with the place name in one clean font.",
+    "Same recipe on every slide so the set matches.",
+    "Export every slide 1080x1350 (4:5)."
+   ],
+   "why": "4:5 fills the most screen and survives the new 3:4 grid. Likes and sends per view drive reach.",
+   "source": {
+    "name": "RecurPost: Instagram post size guide",
+    "url": "https://recurpost.com/blog/instagram-post-size-guide"
+   },
+   "also": [
+    {
+     "name": "Social Media Today (Instagram's Adam Mosseri)",
+     "url": "https://www.socialmediatoday.com/news/instagram-shares-algorithm-insights-2025/738034/"
+    }
+   ],
+   "look": {
+    "name": "Travel",
+    "contrast": 0.1,
+    "sat": 1.06,
+    "warm": 0.015,
+    "lift": 0.02,
+    "roll": 0.05,
+    "sh": [
+     0,
+     0,
+     0.004
+    ],
+    "hi": [
+     0.006,
+     0.003,
+     -0.004
+    ],
+    "grain": 0.01,
+    "expo": 1.03
+   }
+  },
+  {
+   "id": "film",
+   "name": "Faded film",
+   "when": "Cities, signs, street scenes.",
+   "doing_well": "Somewhere in LA (3K views) uses it.",
+   "shoot": [
+    "Look for bold color against plain sky or walls.",
+    "Frame tight and vertical."
+   ],
+   "edit": [
+    "Lift blacks (Tone Curve: raise the bottom point a little).",
+    "Temp +8, Saturation -5, Grain 15.",
+    "Highlights toward warm in Color Grading."
+   ],
+   "why": "Lifted blacks and warm highlights are the classic film-stock look. Keep it subtle per Adobe.",
+   "source": {
+    "name": "Adobe: Introducing Color Grading",
+    "url": "https://blog.adobe.com/en/publish/2020/10/20/introducing-color-grading"
+   },
+   "look": {
+    "name": "Faded film",
+    "contrast": 0.05,
+    "sat": 0.92,
+    "warm": 0.03,
+    "lift": 0.06,
+    "roll": 0.1,
+    "sh": [
+     0.008,
+     0.004,
+     -0.002
+    ],
+    "hi": [
+     0.012,
+     0.006,
+     -0.008
+    ],
+    "grain": 0.04,
+    "expo": 1.02
+   }
+  },
+  {
+   "id": "bluehour",
+   "name": "Blue hour",
+   "when": "Before sunrise or after sunset, mountains and clouds.",
+   "doing_well": "#blue got 7 comments, your second most.",
+   "shoot": [
+    "Arrive 20-30 minutes before sunrise.",
+    "Expose for the sky and let the person go to silhouette.",
+    "Brace the camera on a rock; light is low."
+   ],
+   "edit": [
+    "Temp -5 to -10, Tint +5 toward magenta for the purple.",
+    "Shadows toward blue, Highlights toward pink/orange in Color Grading.",
+    "Keep the sun small: Highlights -40."
+   ],
+   "why": "Same backlight exposure rule as golden hour, cooler balance.",
+   "source": {
+    "name": "Nikon: Golden hour with backlighting",
+    "url": "https://www.nikon.co.uk/en_GB/learn-and-explore/magazine/tips-and-tricks/make-the-most-of-golden-hour-with-backlighting"
+   },
+   "look": {
+    "name": "Blue hour",
+    "contrast": 0.12,
+    "sat": 1.04,
+    "warm": -0.02,
+    "lift": 0.02,
+    "roll": 0.1,
+    "sh": [
+     -0.004,
+     -0.004,
+     0.016
+    ],
+    "hi": [
+     0.014,
+     0.002,
+     0.006
+    ],
+    "grain": 0.015,
+    "expo": 1.0
+   }
+  }
+ ],
+ "research": [
+  {
+   "id": "r20261022-1",
+   "title": "What Instagram ranks on",
+   "takeaway": "Instagram's head says the top 3 ranking signals are watch time, likes and sends. Check likes per reach and sends per reach in your Insights.",
+   "source": "Social Media Today (Instagram's Adam Mosseri)",
+   "url": "https://www.socialmediatoday.com/news/instagram-shares-algorithm-insights-2025/738034/",
+   "date": "Oct 22"
+  },
+  {
+   "id": "r20261022-2",
+   "title": "Feed size after the 3:4 grid",
+   "takeaway": "Post at 1080x1350 (4:5). It fills the most screen and still looks right in the new 3:4 profile grid.",
+   "source": "RecurPost: Instagram post size guide",
+   "url": "https://recurpost.com/blog/instagram-post-size-guide",
+   "date": "Oct 22"
+  },
+  {
+   "id": "r20261022-3",
+   "title": "Backlit golden hour",
+   "takeaway": "Sun just off to the side or behind the subject, -1 to -2 EV, Daylight or Shade white balance, then warm it a touch in edit.",
+   "source": "Nikon: Golden hour with backlighting",
+   "url": "https://www.nikon.co.uk/en_GB/learn-and-explore/magazine/tips-and-tricks/make-the-most-of-golden-hour-with-backlighting",
+   "date": "Oct 22"
+  },
+  {
+   "id": "r20261022-4",
+   "title": "Orange and teal, step by step",
+   "takeaway": "Shift blues toward teal in HSL, push highlights toward orange and shadows toward teal in Color Grading, then save it as a preset.",
+   "source": "Envato Tuts+: Orange and teal look in Lightroom",
+   "url": "https://photography.tutsplus.com/tutorials/how-to-create-the-orange-and-teal-look-in-photos-with-lightroom-classic-diy-style-preset--cms-36646",
+   "date": "Oct 22"
+  },
+  {
+   "id": "r20261022-5",
+   "title": "Snow reads gray",
+   "takeaway": "Cameras make snow gray, so add +1/3 to +2 EV, and warm the white balance to remove the blue cast on sunny days.",
+   "source": "Canon USA: Photographing snow",
+   "url": "https://www.usa.canon.com/learning/training-articles/training-articles-list/photographing-snow",
+   "date": "Oct 22"
+  }
+ ],
+ "practice": [
+  {
+   "id": "t20261022-glacier",
+   "date": "Oct 22",
+   "photo": "Glacier",
+   "technique": "Snow: remove blue cast, keep texture",
+   "before": "lab/posts/glacier.jpg",
+   "after": "lab/posts/glacier_t1.jpg",
+   "note": "First try followed the +EV tip and blew the snow out to pure white, so the tracks disappeared. Second try only neutralized the blue cast, pulled the brightest snow down and added a little local contrast. Tracks read better. It's a small gain because the screenshot is low quality.",
+   "verdict": "kept",
+   "source": "Canon USA: Photographing snow",
+   "source_url": "https://www.usa.canon.com/learning/training-articles/training-articles-list/photographing-snow"
+  }
+ ],
+ "playbook": [
+  {
+   "id": "p20261021-1",
+   "title": "Subject-aware background blur",
+   "how": "Mask the people, then blur the background a little more the farther it is from them. Keeps texture near the subject so it looks like real lens falloff.",
+   "from": "Your review, Oct 21"
+  },
+  {
+   "id": "p20261021-2",
+   "title": "Light skin retouch",
+   "how": "Remove only mid-size detail (wrinkles, veins) and keep fine pore texture. Protect brows, eyes and lips.",
+   "from": "Your review, Oct 21"
+  },
+  {
+   "id": "p20261021-3",
+   "title": "Shadow lift without haze",
+   "how": "Lift only the deepest shadows and add back gentle contrast. A big lift on a backlit shot looks washed out.",
+   "from": "Your review, Oct 21"
+  },
+  {
+   "id": "p20261022-1",
+   "title": "On snow, never brighten globally",
+   "how": "Neutralize the blue cast and protect the brightest snow. Adding exposure after the fact wipes out the texture.",
+   "from": "Practice test, Oct 22"
+  }
+ ],
+ "posts": [
+  {
+   "id": "tetons",
+   "title": "The Grand Tetons",
+   "caption": "0.0.24 · Wyoming",
+   "date": "Jul 17, 2025",
+   "format": "Carousel (5) with title card",
+   "views": 5300,
+   "likes": 122,
+   "comments": 11,
+   "sends": 5,
+   "img": "lab/posts/tetons.jpg",
+   "grade": {
+    "light": 3,
+    "exposure": 4,
+    "color": 4,
+    "composition": 4,
+    "story": 5,
+    "fit": 5
+   },
+   "note": "Your best post. Big clear landscape, layered front to back (fence, field, trees, peaks, sky), and a title card naming the place. The carousel gives people more reasons to stop and like.",
+   "metrics": {
+    "bright": 0.6,
+    "contrast": 0.227,
+    "sat": 0.25,
+    "warm_hi": -0.122,
+    "warm_lo": 0.032,
+    "black": 0.106,
+    "clip": 1.7
+   },
+   "score": 25
+  },
+  {
+   "id": "seaplanes",
+   "title": "Canada seaplanes",
+   "caption": "0.0.23 · Canada",
+   "date": "Jun 18, 2025",
+   "format": "Carousel (3)",
+   "views": 3500,
+   "likes": 59,
+   "comments": null,
+   "sends": null,
+   "img": "lab/posts/seaplanes.jpg",
+   "grade": {
+    "light": 3,
+    "exposure": 4,
+    "color": 3,
+    "composition": 4,
+    "story": 4,
+    "fit": 4
+   },
+   "note": "Strong layers (water, planes, city, mountains) but flat overcast light and muted color. A little more contrast and warmth would lift it.",
+   "metrics": {
+    "bright": 0.61,
+    "contrast": 0.239,
+    "sat": 0.17,
+    "warm_hi": -0.006,
+    "warm_lo": -0.077,
+    "black": 0.011,
+    "clip": 0.1
+   },
+   "score": 22
+  },
+  {
+   "id": "golf",
+   "title": "Golf at sunset",
+   "caption": "0.0.20 · #golf",
+   "date": "Jun 8, 2025",
+   "format": "Video",
+   "views": 3000,
+   "likes": 41,
+   "comments": 3,
+   "sends": 4,
+   "img": "lab/posts/golf.jpg",
+   "grade": {
+    "light": 5,
+    "exposure": 3,
+    "color": 4,
+    "composition": 4,
+    "story": 4,
+    "fit": 3
+   },
+   "note": "Your signature: backlit golden hour, long shadow as a leading line, small figure for scale. The sun area is blown and the shadows are heavy.",
+   "metrics": {
+    "bright": 0.4,
+    "contrast": 0.241,
+    "sat": 0.36,
+    "warm_hi": 0.099,
+    "warm_lo": 0.046,
+    "black": 0.104,
+    "clip": 0.1
+   },
+   "score": 23
+  },
+  {
+   "id": "la_amoeba",
+   "title": "Somewhere in LA",
+   "caption": "Amoeba sign · Los Angeles",
+   "date": "Aug 1, 2025",
+   "format": "Carousel (5) with title",
+   "views": 3000,
+   "likes": 43,
+   "comments": 1,
+   "sends": 4,
+   "img": "lab/posts/la_amoeba.jpg",
+   "grade": {
+    "light": 4,
+    "exposure": 4,
+    "color": 4,
+    "composition": 4,
+    "story": 4,
+    "fit": 5
+   },
+   "note": "Vertical frame, clean negative space for the title, warm faded film color. A place-name carousel again.",
+   "metrics": {
+    "bright": 0.61,
+    "contrast": 0.251,
+    "sat": 0.35,
+    "warm_hi": 0.002,
+    "warm_lo": 0.294,
+    "black": 0.13,
+    "clip": 1.0
+   },
+   "score": 25
+  },
+  {
+   "id": "blue",
+   "title": "#blue sunrise",
+   "caption": "0.0.19 · #blue",
+   "date": "Jun 6, 2025",
+   "format": "Video",
+   "views": 2600,
+   "likes": 41,
+   "comments": 7,
+   "sends": 4,
+   "img": "lab/posts/blue.jpg",
+   "grade": {
+    "light": 5,
+    "exposure": 3,
+    "color": 4,
+    "composition": 3,
+    "story": 4,
+    "fit": 3
+   },
+   "note": "Bold purple sunrise and a silhouette from behind. The rope cuts across the frame and the subject sits low in the center.",
+   "metrics": {
+    "bright": 0.4,
+    "contrast": 0.279,
+    "sat": 0.49,
+    "warm_hi": -0.134,
+    "warm_lo": -0.088,
+    "black": 0.008,
+    "clip": 0.2
+   },
+   "score": 22
+  },
+  {
+   "id": "miami",
+   "title": "Trip to Miami in 2024",
+   "caption": "#throwbackthursday",
+   "date": "Oct 21, 2026",
+   "format": "Video, letterboxed",
+   "views": 2000,
+   "likes": 17,
+   "comments": 8,
+   "sends": 4,
+   "img": "lab/posts/miami.jpg",
+   "grade": {
+    "light": 3,
+    "exposure": 3,
+    "color": 3,
+    "composition": 3,
+    "story": 3,
+    "fit": 3
+   },
+   "note": "Only 11 hours old when logged, so views are still growing. Most comments per like of any post. Letterbox bars waste feed space.",
+   "metrics": {
+    "bright": 0.34,
+    "contrast": 0.233,
+    "sat": 0.24,
+    "warm_hi": 0.081,
+    "warm_lo": -0.036,
+    "black": 0.063,
+    "clip": 0.1
+   },
+   "score": 18
+  },
+  {
+   "id": "golden_hours",
+   "title": "Golden Hours",
+   "caption": "0.0.17 · Discovery Park",
+   "date": "May 29, 2025",
+   "format": "Video",
+   "views": 1900,
+   "likes": 25,
+   "comments": 1,
+   "sends": 5,
+   "img": "lab/posts/golden_hours.jpg",
+   "grade": {
+    "light": 4,
+    "exposure": 4,
+    "color": 4,
+    "composition": 5,
+    "story": 4,
+    "fit": 3
+   },
+   "note": "Best composition: two people from behind, path leading to the lighthouse, warm orange sky. Highest sends per view of all your posts.",
+   "metrics": {
+    "bright": 0.39,
+    "contrast": 0.252,
+    "sat": 0.42,
+    "warm_hi": 0.344,
+    "warm_lo": 0.038,
+    "black": 0.02,
+    "clip": 0.1
+   },
+   "score": 24
+  },
+  {
+   "id": "rainier",
+   "title": "Rainier sunrise",
+   "caption": "0.2.2",
+   "date": "May 14, 2026",
+   "format": "Carousel (2), video",
+   "views": 1800,
+   "likes": 40,
+   "comments": 2,
+   "sends": 3,
+   "img": "",
+   "grade": null,
+   "note": "Sunrise above the clouds. Second-best likes per view (2.2%). No clean image in the screenshots, so not graded."
+  },
+  {
+   "id": "glacier",
+   "title": "Glacier",
+   "caption": "0.1.1",
+   "date": "",
+   "format": "Video",
+   "views": 1200,
+   "likes": 21,
+   "comments": 1,
+   "sends": 1,
+   "img": "lab/posts/glacier.jpg",
+   "grade": {
+    "light": 3,
+    "exposure": 3,
+    "color": 2,
+    "composition": 3,
+    "story": 3,
+    "fit": 3
+   },
+   "note": "Lowest views. Almost no color or contrast and the people are tiny, so the eye has nowhere to land.",
+   "metrics": {
+    "bright": 0.63,
+    "contrast": 0.187,
+    "sat": 0.1,
+    "warm_hi": -0.046,
+    "warm_lo": -0.059,
+    "black": 0.062,
+    "clip": 0.1
+   },
+   "score": 17
+  }
+ ]
+}
