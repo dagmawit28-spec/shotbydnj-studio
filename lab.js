@@ -8,7 +8,7 @@ const link = (s) => s && safe(s.url) ? `<a href="${esc(safe(s.url))}" target="_b
 const fmtK = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'K' : String(n);
 const pct = (a, b) => a == null || !b ? '–' : (a / b * 100).toFixed(a / b < 0.01 ? 2 : 1) + '%';
 const H = () => window.__hq;
-let lab = null, err = '', view = 'style', recipeId = 'house', sceneId = 'golden', applying = false, applied = null;
+let lab = null, err = '', view = 'style', recipeId = 'house', sceneId = 'golden', placeSet = 'wa', applying = false, applied = null;
 try { view = localStorage.getItem('sbdnj-learn-view') || 'style'; recipeId = localStorage.getItem('sbdnj-recipe') || 'house'; } catch {}
 
 async function load() {
@@ -78,6 +78,15 @@ function viewCamera() {
     <div class="card"><span class="who">iPhone</span>${(s.iphone || []).map(t => `<span>· ${esc(t)}</span>`).join('')}</div>
     <div class="card"><span class="who">Why</span><span>${esc(s.why)}</span><span class="note">Sources: ${(s.sources || []).map(link).join(' · ')}</span></div>`;
 }
+function viewPlaces() {
+  const P = lab.places || {}, list = (placeSet === 'world' ? P.world : P.wa) || [], rn = id => (lab.recipes || []).find(r => r.id === id)?.name || '';
+  return `<span class="note">${esc(P.note)}</span>
+    <div class="chips"><button data-pset="wa" aria-pressed="${placeSet === 'wa'}">Washington</button><button data-pset="world" aria-pressed="${placeSet === 'world'}">World</button></div>
+    ${list.map(p => `<div class="card"><span class="who">${esc(p.name)}</span><span>${esc(p.what)}</span>
+      <span><b>When:</b> ${esc(p.best)}</span><span class="note">${esc(p.tip)}</span>
+      ${rn(p.recipe) ? `<span class="note">Recipe: <b>${esc(rn(p.recipe))}</b></span>` : ''}
+      <span class="note"><a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}" target="_blank" rel="noopener" style="color:inherit">Map</a>${(p.sources || []).length ? ' · Sources: ' + p.sources.map(link).join(' · ') : ''}</span></div>`).join('')}`;
+}
 function viewLearning() {
   const p = lab.practice || [], r = lab.research || [], pb = lab.playbook || [];
   return `
@@ -119,10 +128,11 @@ function viewLearning() {
 function pane(el) {
   if (!lab) { el.innerHTML = `<div class="card"><span class="note">${esc(err || 'Loading what the studio has learned…')}</span></div>`; if (!err) load().then(() => { if (H()?.currentTab?.() === 'learn') pane(el); }); return; }
   el.innerHTML = `<span class="eyebrow">Always learning</span>
-    <div class="chips" role="tablist">${[['style', 'My style'], ['recipes', 'Recipes'], ['camera', 'Camera'], ['learning', 'Studio learning']].map(([k, n]) => `<button data-view="${k}" aria-pressed="${view === k}">${n}</button>`).join('')}</div>
-    ${view === 'recipes' ? viewRecipes() : view === 'camera' ? viewCamera() : view === 'learning' ? viewLearning() : viewStyle()}`;
+    <div class="chips" role="tablist">${[['style', 'My style'], ['recipes', 'Recipes'], ['camera', 'Camera'], ['places', 'Places'], ['learning', 'Studio learning']].map(([k, n]) => `<button data-view="${k}" aria-pressed="${view === k}">${n}</button>`).join('')}</div>
+    ${view === 'recipes' ? viewRecipes() : view === 'camera' ? viewCamera() : view === 'places' ? viewPlaces() : view === 'learning' ? viewLearning() : viewStyle()}`;
   el.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { view = b.dataset.view; try { localStorage.setItem('sbdnj-learn-view', view); } catch {} pane(el); el.scrollTop = 0; }));
   el.querySelectorAll('[data-recipe]').forEach(b => b.addEventListener('click', () => { recipeId = b.dataset.recipe; applied = null; try { localStorage.setItem('sbdnj-recipe', recipeId); } catch {} pane(el); }));
+  el.querySelectorAll('[data-pset]').forEach(b => b.addEventListener('click', () => { placeSet = b.dataset.pset; pane(el); }));
   el.querySelectorAll('[data-scene]').forEach(b => b.addEventListener('click', () => { sceneId = b.dataset.scene; pane(el); }));
   const copy = el.querySelector('#rCopy');
   if (copy) copy.addEventListener('click', async () => { const t = el.querySelector('#rPrompt'); try { await navigator.clipboard.writeText(t.value); copy.textContent = 'Copied'; } catch { t.select(); copy.textContent = 'Selected, tap Copy'; } });

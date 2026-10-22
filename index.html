@@ -221,6 +221,7 @@ details.grp[open]>summary::before{content:'▾ '}
   <button data-room="espresso">Espresso Bar</button>
   <button data-room="lab" hidden>Learning Lab</button>
   <button data-room="cam" hidden>Camera Room</button>
+  <button data-room="places" hidden>Places Room</button>
   <span style="width:1px;height:22px;background:var(--edge)"></span>
   <button id="camEye" aria-pressed="true">Eye level</button>
   <button id="camSec">Security cam</button>
@@ -681,7 +682,7 @@ function tree(x, z, h, seedv, parent = world, s = 1) {
   inst.castShadow = true; inst.receiveShadow = true; g.add(inst);
   return g;
 }
-for (const [x, z, s] of [[-18, 13.5, 101], [-8.5, 13.6, 102], [8.5, 13.6, 103], [18, 13.5, 104], [-18, -13.5, 105], [18, -13.5, 106], [19, 4.5, 107], [-19, -4.5, 108]]) {
+for (const [x, z, s] of [[-18, 13.5, 101], [-8.5, 13.6, 102], [8.5, 13.6, 103], [18, 13.5, 104], [-18, -13.5, 105], [18, -13.5, 106], [19.5, 7.2, 107], [-19, -4.5, 108]]) {
   box(1.6, 0.6, 1.6, M.planter, x, 0.3, z); box(1.45, 0.05, 1.45, M.soil, x, 0.61, z, world, { cast: false });
   const t = tree(x, z, 6.2, s); t.position.y = 0.6;
 }
@@ -1514,13 +1515,14 @@ function updateCrew(dt) {
   for (const d of DOOR.panels) d.g.position.x = DOOR.x + d.s * (0.32 + DOOR.open * 0.6);
 }
 const WING = { on: false, x0: 0, x1: 0, z0: 0 };
-const CAMW = { on: false, x0: 0, x1: 0, z0: 0 }; let LABDATA = null;
+const CAMW = { on: false, x0: 0, x1: 0, z0: 0 }; const PLW = { on: false, x1: 0, z0: 0, z1: 0 }; let LABDATA = null;
 function zoneOf(p) { const { x, z } = p.entry.model.position;
+  if (PLW.on && x > BLD.x1 && x <= PLW.x1 && z >= PLW.z0 && z <= PLW.z1) return 'places';
   if (CAMW.on && x >= CAMW.x0 && x <= CAMW.x1 && z < BLD.z0 && z >= CAMW.z0) return 'cam';
   if (WING.on && x >= WING.x0 && x <= WING.x1 && z < BLD.z0 && z >= WING.z0) return 'lab';
   if (x < BLD.x0 || x > BLD.x1 || z < BLD.z0 || z > BLD.z1) return 'outside';
   if (x >= 2) return z < -1 ? 'boss' : 'board'; if (z > 3) return x < -5 ? 'rec' : 'espresso'; return 'bullpen'; }
-const ZONE_NAME = { cam: 'Camera Room', lab: 'Learning Lab', outside: 'Outside', boss: "Boss's Office", board: 'Boardroom', rec: 'Fun / Pool Lounge', espresso: 'Espresso Bar', bullpen: 'Editing Bullpen' };
+const ZONE_NAME = { places: 'Places Room', cam: 'Camera Room', lab: 'Learning Lab', outside: 'Outside', boss: "Boss's Office", board: 'Boardroom', rec: 'Fun / Pool Lounge', espresso: 'Espresso Bar', bullpen: 'Editing Bullpen' };
 
 /* =========================================================================
    KUDOS
@@ -1744,7 +1746,7 @@ function personCard(p) {
 const OPEN_GROUPS = new Set();
 function paneCrew() {
   const groups = {}; PEOPLE.forEach(p => (groups[ZONE_NAME[zoneOf(p)]] ||= []).push(p));
-  const order = ['Editing Bullpen', 'Learning Lab', 'Camera Room', "Boss's Office", 'Boardroom', 'Espresso Bar', 'Fun / Pool Lounge', 'Outside'];
+  const order = ['Editing Bullpen', 'Learning Lab', 'Camera Room', 'Places Room', "Boss's Office", 'Boardroom', 'Espresso Bar', 'Fun / Pool Lounge', 'Outside'];
   const list = order.filter(g => groups[g]).map(g => `<details class="grp" data-g="${esc(g)}"${OPEN_GROUPS.has(g) ? ' open' : ''}><summary class="group">${esc(g)} · ${groups[g].length}</summary>` + groups[g].map(p => { const nk = kudosFor(p.id).length; return `<button class="person" data-pid="${esc(p.id)}"><span class="d" style="background:${p.id === 'dag' ? 'var(--accent)' : 'var(--cool)'}"></span><span><b>${esc(p.name)}${nk ? ` <span style="color:var(--accent)">★${nk}</span>` : ''}</b><small>${esc(p.role)}</small><span class="now${performance.now() < p.realUntil ? ' real' : ''}" data-now="${esc(p.id)}">${esc(statusOf(p))}</span></span></button>`; }).join('') + '</details>').join('');
   const sel = selectedId && byId(selectedId);
   pane.innerHTML = `<span class="eyebrow">Live floor</span><h2>What the crew is doing</h2>
@@ -1966,6 +1968,45 @@ async function boot() {
       const rb = document.querySelector('[data-room="cam"]'); if (rb) rb.hidden = false;
       ROOMS.cam = { eye: [[x0 + 0.8, 1.62, z0 - 0.6], [cx + 0.6, 1.0, z1 + 1.2]], sec: [[x1 - 0.5, 3.0, z0 - 0.4], [x0 + 2, 0.6, z1 + 1.5]] };
     } catch (e) { console.warn('camera wing', e); }
+    // PLACES ROOM (east side): a globe with pins on real coordinates + Washington board + two scouts
+    try {
+      const PL = (LABDATA || {}).places || {}, x0 = BLD.x1, x1 = BLD.x1 + 5.6, z0 = -4, z1 = 4, cx = (x0 + x1) / 2, cz = 0, ww = x1 - x0, dd = z1 - z0;
+      PLW.on = true; PLW.x1 = x1; PLW.z0 = z0; PLW.z1 = z1;
+      box(ww + 0.3, 0.3, dd + 0.6, M.concreteDark, cx + 0.15, -0.15, cz, hq, { cast: false });
+      { const f = new THREE.Mesh(new THREE.PlaneGeometry(ww, dd), M.oakFloor); f.rotation.x = -Math.PI / 2; f.position.set(cx, 0.005, cz); f.receiveShadow = true; hq.add(f); }
+      box(ww + 0.3, 0.32, dd + 0.6, M.concreteDark, cx + 0.15, BLD.h + 0.16, cz, hq);
+      curtainWall(x0, z0, x1, z0); curtainWall(x1, z0, x1, z1); curtainWall(x1, z1, x0, z1);
+      for (const [x, z] of [[x1, z0], [x1, z1]]) box(0.4, BLD.h + 0.7, 0.4, M.steel, x, (BLD.h + 0.7) / 2, z, hq);
+      // globe
+      const gx = cx + 0.3, gz = -1.6, R = 0.75;
+      cyl(0.35, 0.45, 0.8, 32, M.blackGloss, gx, 0.4, gz, hq);
+      const globe = new THREE.Group(); globe.position.set(gx, 0.8 + R + 0.05, gz); hq.add(globe);
+      globe.add(new THREE.Mesh(new THREE.SphereGeometry(R, 48, 32), new THREE.MeshStandardMaterial({ color: 0x1d3c5a, roughness: 0.55, metalness: 0.1 })));
+      globe.add(new THREE.Mesh(new THREE.SphereGeometry(R * 1.003, 24, 12), new THREE.MeshBasicMaterial({ color: 0x6fa0c8, wireframe: true, transparent: true, opacity: 0.25 })));
+      const pinMat = new THREE.MeshBasicMaterial({ color: 0xE8A33D, toneMapped: false }), home = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
+      const pin = (lat, lon, m) => { const phi = (90 - lat) * Math.PI / 180, th = (lon + 180) * Math.PI / 180; const p = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 8), m); p.position.set(-R * Math.sin(phi) * Math.cos(th), R * Math.cos(phi), R * Math.sin(phi) * Math.sin(th)).multiplyScalar(1.02); globe.add(p); };
+      [...(PL.wa || []), ...(PL.world || [])].forEach(p => { if (Number.isFinite(+p.lat) && Number.isFinite(+p.lon)) pin(+p.lat, +p.lon, pinMat); });
+      pin(47.61, -122.30, home);
+      mixers.push({ update: dt => { globe.rotation.y += dt * 0.25; } });
+      // Washington board on the back glass
+      { const list = (PL.wa || []).slice(0, 7), cv = makeCanvas(1024, 720), g = cv.getContext('2d'); g.fillStyle = '#0b0c0e'; g.fillRect(0, 0, 1024, 720);
+        g.fillStyle = '#E8A33D'; g.font = '700 54px system-ui, sans-serif'; g.fillText('PLACES TO SHOOT', 40, 78);
+        list.forEach((p, i) => { const y = 150 + i * 80; g.fillStyle = '#F1ECE4'; g.font = '600 34px system-ui, sans-serif'; g.fillText(String(p.name).slice(0, 34), 40, y); g.fillStyle = '#9aa4b2'; g.font = '400 24px system-ui, sans-serif'; g.fillText(String(p.best).slice(0, 70), 40, y + 32); });
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 2.04), new THREE.MeshBasicMaterial({ map: tex(cv), toneMapped: false })); m.position.set(x1 - 0.12, 2.0, 1.6); m.rotation.y = -Math.PI / 2; hq.add(m); }
+      { const c = makeCanvas(1024, 128), g = c.getContext('2d'); g.fillStyle = '#0b0c0e'; g.fillRect(0, 0, 1024, 128); g.fillStyle = '#E8A33D'; g.font = '700 64px system-ui, sans-serif'; g.textBaseline = 'middle'; g.fillText('PLACES ROOM', 36, 66);
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 0.5), new THREE.MeshBasicMaterial({ map: tex(c), toneMapped: false })); m.position.set(cx, 3.2, z1 - 0.12); m.rotation.y = Math.PI; hq.add(m); }
+      // scouts' desk
+      const dx = cx - 0.2, dz = 2.4; roundedBox(3.2, 0.045, 0.85, 0.012, M.walnut, dx, 0.745, dz, hq); for (const s of [-1, 1]) box(0.08, 0.7, 0.08, M.steel, dx + s * 1.4, 0.36, dz, hq);
+      (Array.isArray(PL.staff) ? PL.staff : []).slice(0, 2).forEach((st, i) => {
+        const x = dx - 0.8 + i * 1.6; box(0.62, 0.38, 0.03, M.blackMatte, x, 1.02, dz + 0.25, hq); officeChair(x, dz - 0.78, Math.PI);
+        const id = 'pl_' + String(st.id || i).replace(/[^a-z0-9_]/gi, '').slice(0, 40); if (byId(id)) return;
+        POOLS[id] = (Array.isArray(st.tasks) ? st.tasks : ['Scouting locations']).slice(0, 8).map(t => String(t).slice(0, 90)); DESC[id] = String(st.desc || '').slice(0, 300);
+        register(spawn(xbot, { xbot: true, hue: 0.3 + i * 0.35, x, y: -0.47, z: dz - 0.73, ry: 0, clip: 'idle', sit: true, typing: true, speed: 0.8 }), id, String(st.name || 'Scout').slice(0, 40), String(st.role || '').slice(0, 60), 'Places Room', { kind: 'seat', seat: [x, dz - 0.73], y: -0.47, ry: 0, node: null });
+      });
+      const rb = document.querySelector('[data-room="places"]'); if (rb) rb.hidden = false;
+      ROOMS.places = { eye: [[x0 + 0.4, 1.75, 3.5], [x1 - 1.2, 1.3, -2.2]], sec: [[x1 - 0.4, 3.0, -3.5], [x0 + 1, 0.6, 2.5]] };
+      IN.bounds.x1 = Math.max(IN.bounds.x1, x1 - 0.35);
+    } catch (e) { console.warn('places room', e); }
     // CAMERON PANA, construction lead: builds every new desk and wing
     try {
       const hires = (LABDATA?.hires || []).slice(0, 12), bays = Math.max(1, Math.ceil(hires.length / 4)), full = hires.length && hires.length % 4 === 0;

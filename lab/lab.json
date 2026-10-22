@@ -360,6 +360,50 @@
     "grain": 0.015,
     "expo": 1.0
    }
+  },
+  {
+   "id": "softfilm",
+   "name": "Soft travel film",
+   "when": "Travel Reels and photos with a person in a huge landscape. The look from the travel-film account you sent.",
+   "doing_well": "Her Faroe Islands reel showed 35.3K likes and 2,585 sends in your screen recording. Her style matches your signature: a person from behind facing a big view.",
+   "shoot": [
+    "Person small in a huge view, usually from behind, plus a few close-ups looking up or eyes closed.",
+    "Shoot soft light: golden hour, light cloud, fog. Avoid hard midday sun.",
+    "For Reels, film 16:9 at 24fps (1/50) and post it letterboxed with a one-line caption on each clip."
+   ],
+   "edit": [
+    "Tone curve: lift the black point (bottom-left up to about 15-20) and pull the white point down a little so nothing is pure white.",
+    "Contrast -15, Highlights -30, Shadows +20.",
+    "Color Grading: Highlights toward warm orange (sat 10-15), Shadows toward teal-green (sat 5-10).",
+    "Saturation -10, but keep greens and yellows (HSL Green/Yellow saturation +10).",
+    "Grain 15-20. Optional: a light glow on highlights (Lightroom: Clarity -10 on a highlights mask)."
+   ],
+   "why": "Measured from 9 clips in your screen recording: blacks never go fully black, whites stop around 75-88%, highlights lean warm, shadows lean teal-green, and there's a soft glow like a diffusion filter. Lifted blacks plus warm highlights is the classic film look; Adobe says small color-grade moves go a long way.",
+   "source": {
+    "name": "Adobe: Introducing Color Grading",
+    "url": "https://blog.adobe.com/en/publish/2020/10/20/introducing-color-grading"
+   },
+   "also": [],
+   "look": {
+    "name": "Soft travel film",
+    "contrast": 0.03,
+    "sat": 0.92,
+    "warm": 0.025,
+    "lift": 0.08,
+    "roll": 0.2,
+    "sh": [
+     -0.008,
+     0.004,
+     0.008
+    ],
+    "hi": [
+     0.016,
+     0.008,
+     -0.01
+    ],
+    "grain": 0.03,
+    "expo": 1.08
+   }
   }
  ],
  "research": [
@@ -402,9 +446,53 @@
    "source": "Canon USA: Photographing snow",
    "url": "https://www.usa.canon.com/learning/training-articles/training-articles-list/photographing-snow",
    "date": "Oct 22"
+  },
+  {
+   "id": "r20261022-6",
+   "title": "Soft travel film look",
+   "takeaway": "Measured a travel-film reference you sent: lifted blacks, whites capped below pure white, warm highlights, teal-green shadows, soft highlight glow, poetic one-line captions across clips. Her top reel had 2,585 sends.",
+   "source": "Your screen recording of the reference account",
+   "url": "",
+   "date": "Oct 22"
   }
  ],
  "practice": [
+  {
+   "id": "t20261022sf-forest_walk",
+   "date": "Oct 22",
+   "photo": "Forest walk",
+   "technique": "Soft travel film",
+   "before": "lab/posts/forest_walk.jpg",
+   "after": "lab/posts/forest_walk_t20261022sf.jpg",
+   "note": "Applied the soft travel-film look: lifted blacks, softer whites, warm highlights, teal-green shadows, a light glow and grain. First pass came out darker than her clips, so midtones were brightened. Works best on the backlit valley; the sunny trail shot is still harsher than her soft-light scenes.",
+   "verdict": "kept",
+   "source": "Reference account Dag sent",
+   "source_url": ""
+  },
+  {
+   "id": "t20261022sf-trail_hike",
+   "date": "Oct 22",
+   "photo": "Trail hike",
+   "technique": "Soft travel film",
+   "before": "lab/posts/trail_hike.jpg",
+   "after": "lab/posts/trail_hike_t20261022sf.jpg",
+   "note": "Applied the soft travel-film look: lifted blacks, softer whites, warm highlights, teal-green shadows, a light glow and grain. First pass came out darker than her clips, so midtones were brightened. Works best on the backlit valley; the sunny trail shot is still harsher than her soft-light scenes.",
+   "verdict": "kept",
+   "source": "Reference account Dag sent",
+   "source_url": ""
+  },
+  {
+   "id": "t20261022sf-powerline_valley",
+   "date": "Oct 22",
+   "photo": "Powerline valley",
+   "technique": "Soft travel film",
+   "before": "lab/posts/powerline_valley.jpg",
+   "after": "lab/posts/powerline_valley_t20261022sf.jpg",
+   "note": "Applied the soft travel-film look: lifted blacks, softer whites, warm highlights, teal-green shadows, a light glow and grain. First pass came out darker than her clips, so midtones were brightened. Works best on the backlit valley; the sunny trail shot is still harsher than her soft-light scenes.",
+   "verdict": "kept",
+   "source": "Reference account Dag sent",
+   "source_url": ""
+  },
   {
    "id": "t20261022-glacier",
    "date": "Oct 22",
@@ -1187,5 +1275,209 @@
   "other": 0,
   "last_sorted": "",
   "recent": []
+ },
+ "places": {
+  "note": "Spots picked for your style: a person from behind facing a big view, golden hour, soft light. Times and access change, so check the linked source before you go.",
+  "staff": [
+   {
+    "id": "wascout",
+    "name": "Washington Scout",
+    "role": "Spots within a day's drive",
+    "desc": "Finds Washington spots that fit your look and the best season and light for each.",
+    "tasks": [
+     "Checking Paradise wildflower timing",
+     "Planning a Palouse sunrise",
+     "Reading tide tables for Rialto Beach",
+     "Scouting Diablo Lake color",
+     "Mapping golden hour at Discovery Park"
+    ]
+   },
+   {
+    "id": "worldscout",
+    "name": "World Scout",
+    "role": "Trips worth saving for",
+    "desc": "Tracks bucket-list places that suit your soft travel-film style, with the weather and access quirks of each.",
+    "tasks": [
+     "Reading Faroe hiking rules",
+     "Checking Madeira fog forecasts",
+     "Planning the Azores crater hike",
+     "Saving the Phuket plane-landing spot"
+    ]
+   }
+  ],
+  "wa": [
+   {
+    "id": "paradise",
+    "name": "Paradise, Mount Rainier",
+    "lat": 46.786,
+    "lon": -121.735,
+    "what": "Wildflower meadows with Rainier behind. Put a person on the trail in the foreground.",
+    "best": "Late July to early August for peak flowers; golden hour.",
+    "tip": "Check NPS for entry reservations before you go.",
+    "recipe": "golden",
+    "sources": [
+     {
+      "name": "NPS: Mount Rainier wildflower status",
+      "url": "https://www.nps.gov/mora/planyourvisit/wildflower-status.htm"
+     },
+     {
+      "name": "NPS: Timed entry at Mount Rainier",
+      "url": "https://www.nps.gov/places/timed-entry-reservations-at-mount-rainier.htm"
+     }
+    ]
+   },
+   {
+    "id": "steptoe",
+    "name": "Steptoe Butte, Palouse",
+    "lat": 46.995,
+    "lon": -117.297,
+    "what": "Rolling green and gold wheat hills from 1,000 ft up. Tiny person on a ridge = huge scale.",
+    "best": "Late spring to early summer for green; later summer for gold. Sunrise and sunset.",
+    "tip": "Busy at sunrise in season; Skyline Drive near Farmington has the same look with fewer people.",
+    "recipe": "softfilm",
+    "sources": [
+     {
+      "name": "PhotoHound: Palouse guide",
+      "url": "https://photohound.co/guide/palouse"
+     }
+    ]
+   },
+   {
+    "id": "palousefalls",
+    "name": "Palouse Falls",
+    "lat": 46.664,
+    "lon": -118.223,
+    "what": "A 185-ft waterfall over basalt cliffs.",
+    "best": "Spring when the water is high; golden hour.",
+    "tip": "Pair it with Steptoe Butte on the same trip.",
+    "recipe": "travel",
+    "sources": [
+     {
+      "name": "PhotoHound: Palouse guide",
+      "url": "https://photohound.co/guide/palouse"
+     }
+    ]
+   },
+   {
+    "id": "diablo",
+    "name": "Diablo Lake Overlook",
+    "lat": 48.712,
+    "lon": -121.103,
+    "what": "Turquoise glacier lake below mountains. Shoot someone at the railing facing the water.",
+    "best": "Sunny days in July to September, when glacial melt makes the color strongest.",
+    "tip": "SR 20 milepost 131.7. The highway closes in winter, so check WSDOT first.",
+    "recipe": "travel",
+    "sources": [
+     {
+      "name": "NPS: Diablo Lake Overlook",
+      "url": "https://www.nps.gov/places/diablo-lake-overlook.htm"
+     }
+    ]
+   },
+   {
+    "id": "rialto",
+    "name": "Rialto Beach, Hole-in-the-Wall",
+    "lat": 47.937,
+    "lon": -124.64,
+    "what": "Sea stacks, driftwood and a rock arch. Silhouette a person inside the hole.",
+    "best": "Late afternoon and sunset. Go 1-2 hours after high tide.",
+    "tip": "About 1.5 miles up the beach. Check the tide table so you don't get trapped.",
+    "recipe": "golden",
+    "sources": [
+     {
+      "name": "PhotoHound: Rialto Beach",
+      "url": "https://www.photohound.co/spot/1130"
+     }
+    ]
+   },
+   {
+    "id": "artistpoint",
+    "name": "Artist Point, Mount Baker",
+    "lat": 48.846,
+    "lon": -121.693,
+    "what": "Mount Shuksan and Baker above alpine lakes and ridges.",
+    "best": "Summer into early fall, when the road is open; sunset.",
+    "tip": "The road (SR 542) to Artist Point only opens in summer and closes for winter.",
+    "recipe": "softfilm",
+    "sources": [
+     {
+      "name": "Cascadia Daily: Road to Artist Point closed for winter",
+      "url": "https://www.cascadiadaily.com/2024/oct/16/road-to-artist-point-closed-for-the-winter-wsdot-announces"
+     }
+    ]
+   },
+   {
+    "id": "discovery",
+    "name": "Discovery Park lighthouse, Seattle",
+    "lat": 47.662,
+    "lon": -122.435,
+    "what": "Path to West Point lighthouse. Your Golden Hours post was shot here.",
+    "best": "Golden hour and hazy evenings.",
+    "tip": "Close to home for quick practice. Your post from here had your best sends per view.",
+    "recipe": "golden",
+    "sources": []
+   }
+  ],
+  "world": [
+   {
+    "id": "faroe",
+    "name": "Faroe Islands",
+    "lat": 62.07,
+    "lon": -7.17,
+    "what": "Turf-roof villages, sea cliffs, Múlafossur waterfall into the ocean. The reference account's 35.3K-like reel was shot here.",
+    "best": "Weather changes from sun to fog in minutes; plan extra days.",
+    "tip": "Some popular hikes require advance payment or a guided visit. Book places to stay early.",
+    "recipe": "softfilm",
+    "sources": [
+     {
+      "name": "PhotoHound: Faroe Islands guide",
+      "url": "https://www.photohound.co/guide/faroe-islands"
+     }
+    ]
+   },
+   {
+    "id": "madeira",
+    "name": "Fanal Forest, Madeira",
+    "lat": 32.81,
+    "lon": -17.14,
+    "what": "Ancient twisted laurel trees in drifting fog. Her lone-tree sunset shot is this kind of scene.",
+    "best": "Misty, shifting weather. Conditions change between morning and afternoon.",
+    "tip": "Plan several days and scout in clear weather first.",
+    "recipe": "softfilm",
+    "sources": [
+     {
+      "name": "PetaPixel: Photographing the Fanal",
+      "url": "https://petapixel.com/2023/05/22/photographing-the-fanal-madeiras-huge-and-ancient-laurel-cloud-forest/"
+     }
+    ]
+   },
+   {
+    "id": "azores",
+    "name": "Corvo Caldeirão, Azores",
+    "lat": 39.7,
+    "lon": -31.1,
+    "what": "A huge green volcanic crater with lakes. Her arms-out crater clip.",
+    "best": "Clear days; cloud is common up high, so try sunset.",
+    "tip": "Trails can be muddy. Bring layers; weather changes fast.",
+    "recipe": "softfilm",
+    "sources": [
+     {
+      "name": "Alex Harford: Azores photo spots",
+      "url": "https://alexharford.uk/photos/azores-best-photo-spots"
+     }
+    ]
+   },
+   {
+    "id": "phuket",
+    "name": "Mai Khao Beach, Phuket",
+    "lat": 8.13,
+    "lon": 98.3,
+    "what": "Beach right by the airport, planes landing overhead. The Thailand clip in the recording.",
+    "best": "Golden hour for warm light on the sand.",
+    "tip": "Mentioned in the caption of the reel you screen-recorded.",
+    "recipe": "golden",
+    "sources": []
+   }
+  ]
  }
 }
