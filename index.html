@@ -1300,6 +1300,7 @@ const POOLS = {
   ingest: ['Tagging footage from the last shoot', 'Transcribing new talking clips', 'Backing up the hike card', 'On a coffee break'],
   qa: ['Checking for frozen frames at clip ends', 'Spot-checking exposure jumps', 'Listening for audio peaks', 'On a coffee break'],
   render: ['Watching the render queue', 'Re-rendering Draft v3', 'Shooting pool between renders', 'Exporting proxies'],
+  jason: ['Setting the vision for the Rainier film', 'Reviewing the Editor\'s plan', 'Giving notes on pacing', 'Deciding the final look with the Look Dev Lead', 'Blocking out the next shoot'],
   andy: ['Standing by for Dag', 'Keeping Dag\'s notes', 'Waiting for instructions', 'Holding Dag\'s schedule'],
   producer: ['Checking who needs footage', 'Lining up the next review', 'Collecting drafts for Dag'],
 };
@@ -1322,6 +1323,7 @@ const DESC = {
   qa: 'Checks every draft before you see it: frozen frames, exposure jumps, audio peaks and missed cuts.',
   render: 'Runs the export and render queue, and builds proxies so edits stay fast.',
   producer: 'Keeps edits moving between people and lines up drafts for your review.',
+  jason: 'The Director. Sets the creative vision for each project, signs off on the edit plan before it reaches you, and gives notes on story, pacing and look.',
   andy: 'Your personal assistant. Andy doesn\'t do crew work. He stays by your desk and helps only you: ask him anything below.',
 };
 const AWARDS = ['Edit of the Week', 'Perfect Grade', 'Clean Cut', 'Nailed the Light', 'Saved Me Hours', 'Above & Beyond'];
@@ -1408,9 +1410,9 @@ const NAV = { a0: [-13.6, -2.4], a1: [-12, -2.4], a2: [-8.6, -2.4], a3: [-5.2, -
   e1: [-2.2, 3.7], e2: [-4.0, 4.4], e3: [-4.0, 8.1], coffee: [-3.55, 5.35], d0: [-3.8, 8.6], d1: [-3.8, 9.8],
   r0: [-5.9, 5.6], r1: [-7.6, 4.3], r2: [-10, 3.8], rW: [-12.0, 4.8], rP: [-12.0, 6.3], rW2: [-12.0, 7.8],
   o0: [-3.8, 11.0], o1: [-10, 11.3], o2: [-15, 11.6], o3: [3, 11.3], o4: [10, 11.4], o5: [16, 11.3], o6: [-17.6, 4], o7: [17.6, 4], o8: [-17.6, -11.8], o9: [17.6, -11.8], back: [0, -12.6],
-  shootA: [-12.2, 13.4], shootB: [12.6, 13.5], sign: [-14.6, 9.9] };
+  shootA: [-12.2, 13.4], shootB: [12.6, 13.5], sign: [-14.6, 9.9], J0: [8.5, 8.35] };
 const ADJ = {};
-'a0-a1 a1-a2 a2-a3 a3-a4 a4-a5 b0-b1 b1-b2 b2-b3 b3-b4 b4-b5 b5-b6 b6-b7 a0-b0 a5-bo0 a5-bd0 bd0-b7 s0-a1 s1-a2 s2-a3 s3-a4 t0-b1 t1-b3 t2-b4 t3-b6 bo0-bo1 bo1-bo2 bo2-bo3 bd0-bd1 bd1-bd2 bd2-bdS bdS-bd3 bd2-L0 L0-L1 bd3-R0 R0-R1 b5-e1 e1-e2 e2-coffee e2-e3 e3-d0 d0-d1 d1-o0 e2-r0 r0-r1 r1-r2 r2-b2 r2-rW rW-rP rP-rW2 o0-o1 o1-o2 o0-o3 o3-o4 o4-o5 o2-o6 o6-o8 o5-o7 o7-o9 o8-back back-o9 o1-shootA o4-shootB o2-sign'
+'a0-a1 a1-a2 a2-a3 a3-a4 a4-a5 b0-b1 b1-b2 b2-b3 b3-b4 b4-b5 b5-b6 b6-b7 a0-b0 a5-bo0 a5-bd0 bd0-b7 s0-a1 s1-a2 s2-a3 s3-a4 t0-b1 t1-b3 t2-b4 t3-b6 bo0-bo1 bo1-bo2 bo2-bo3 bd0-bd1 bd1-bd2 bd2-bdS bdS-bd3 bd2-L0 L0-L1 bd3-R0 R0-R1 b5-e1 e1-e2 e2-coffee e2-e3 e3-d0 d0-d1 d1-o0 e2-r0 r0-r1 r1-r2 r2-b2 r2-rW rW-rP rP-rW2 o0-o1 o1-o2 o0-o3 o3-o4 o4-o5 o2-o6 o6-o8 o5-o7 o7-o9 o8-back back-o9 o1-shootA o4-shootB o2-sign R1-J0'
   .split(' ').forEach(e => { const [a, b] = e.split('-'); (ADJ[a] ||= []).push(b); (ADJ[b] ||= []).push(a); });
 function route(a, b) {
   const dist = { [a]: 0 }, prev = {}, open = new Set([a]);
@@ -1431,7 +1433,7 @@ const TRIPS = {
 const ALLOWED = { editor: ['coffee', 'shootA', 'boss', 'v:colorist', 'v:asst', 'pool'], scout: ['shootB', 'sign', 'coffee', 'screen', 'back'], hacker: ['coffee', 'pool', 'v:colorist', 'v:editor'], setengineer: ['shootA', 'shootB', 'back', 'sign', 'coffee'],
   architect: ['coffee', 'v:hacker', 'screen'], asst: ['coffee', 'shootA', 'v:editor'], colorist: ['coffee', 'boss', 'screen', 'shootB', 'v:photoeditor'], photoeditor: ['shootA', 'sign', 'coffee', 'boss'],
   retoucher: ['coffee', 'pool', 'v:photoeditor'], sound: ['shootB', 'coffee', 'v:editor'], culler: ['coffee', 'boss', 'v:photoeditor'], story: ['coffee', 'v:editor', 'pool'], lookdev: ['boss', 'coffee', 'v:colorist'],
-  ingest: ['v:asst', 'boss', 'screen'], qa: ['v:editor', 'screen', 'v:colorist'], render: ['coffee', 'v:editor'], producer: ['v:editor', 'v:colorist', 'boss', 'coffee', 'shootA', 'pool', 'screen', 'v:photoeditor'] };
+  ingest: ['v:asst', 'boss', 'screen'], qa: ['v:editor', 'screen', 'v:colorist'], render: ['coffee', 'v:editor'], jason: ['boss', 'v:editor', 'v:colorist', 'screen', 'coffee', 'shootA'], producer: ['v:editor', 'v:colorist', 'boss', 'coffee', 'shootA', 'pool', 'screen', 'v:photoeditor'] };
 const byId = id => PEOPLE.find(p => p.id === id);
 function play(e, name, ts) { const a = e.actions[name] || e.actions.idle; if (!a || a === e.cur) return; a.reset(); a.timeScale = ts ?? (name === 'walk' ? 1 : (e.opts.speed ?? 1)); a.fadeIn(0.35).play(); e.cur?.fadeOut(0.35); e.cur = a; }
 function homeStand(p) { return p.home.kind === 'seat' ? NAV[p.home.node] : p.home.pos; }
@@ -1817,6 +1819,7 @@ async function boot() {
     [[6.75, 2.2, -Math.PI / 2, 'L0'], [9.25, 3.55, Math.PI / 2, 'R0'], [6.75, 4.9, -Math.PI / 2, 'L1'], [9.25, 6.25, Math.PI / 2, 'R1']].forEach(([x, z, r, node], i) => { const xx = x + Math.sin(r) * -0.05;
       register(spawn(xbot, { xbot: true, hue: 0.2 + i * 0.2, x: xx, y: -0.45, z, ry: r + Math.PI, clip: i % 2 ? 'agree' : 'idle', sit: true, typing: false, speed: 0.6 }), BD[i][0], BD[i][1], BD[i][2], 'Boardroom', { kind: 'seat', seat: [xx, z], y: -0.45, ry: r + Math.PI, node }); });
     register(spawn(soldier, { x: 9.3, z: 0.1, ry: Math.PI + 0.5, clip: 'Idle' }), 'lookdev', 'Look Dev Lead', 'Runs grade reviews', 'Boardroom', { kind: 'stand', pos: [9.3, 0.1], ry: Math.PI + 0.5, node: 'bd3', clip: 'idle' });
+    register(spawn(xbot, { xbot: true, hue: 0.65, x: 8.5, y: -0.45, z: 7.5, ry: Math.PI, clip: 'idle', sit: true, typing: false, speed: 0.6 }), 'jason', 'Jason Roth', 'Director', 'Boardroom', { kind: 'seat', seat: [8.5, 7.5], y: -0.45, ry: Math.PI, node: 'J0' });
     register(spawn(xbot, { xbot: true, hue: 0.35, x: -2.4, z: 5.2, ry: 0.5, clip: 'agree', speed: 0.7 }), 'ingest', 'Ingestion Agent', 'Footage intake', 'Espresso Bar', { kind: 'stand', pos: [-2.4, 5.2], ry: 0.5, node: 'e2', clip: 'agree' });
     register(spawn(xbot, { xbot: true, hue: 0.75, x: -1.4, z: 5.0, ry: -0.6, clip: 'idle' }), 'qa', 'QA Reviewer', 'Final quality check', 'Espresso Bar', { kind: 'stand', pos: [-1.4, 5.0], ry: -0.6, node: 'e1', clip: 'idle' });
     register(spawn(xbot, { xbot: true, hue: 0.55, x: -10.2, z: 7.6, ry: Math.PI, clip: 'headShake', speed: 0.6 }), 'render', 'Render Agent', 'Exports & render queue', 'Fun / Pool Lounge', { kind: 'stand', pos: [-10.2, 7.6], ry: Math.PI, node: 'rW2', clip: 'headshake' });

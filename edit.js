@@ -162,8 +162,9 @@ Brief from Dag:
 - Keep clips in the order sent unless the story flows better another way.
 - Dag's notes: ${o.notes || '(none)'}
 
+Jason Roth is the Director: after planning, he signs off and writes one short director's note on story, pacing and look (what works, what Dag should watch for).
 Reply with ONLY JSON:
-{"title":"...","summary":"one sentence on the story of the cut","segments":[{"clip":0,"in":1.5,"out":6.0,"why":"short reason","caption":"optional small caption for a key story moment or empty"}],"left_out":[{"clip":2,"why":"..."}]}
+{"title":"...","summary":"one sentence on the story of the cut","director_note":"Jason Roth's note, 1-2 sentences","segments":[{"clip":0,"in":1.5,"out":6.0,"why":"short reason","caption":"optional small caption for a key story moment or empty"}],"left_out":[{"clip":2,"why":"..."}]}
 Segments play in order. in/out are seconds within that clip. Prefer segments 1.5-6 s for B-roll and full sentences for talking.` });
   const text = await claude(content, 5000);
   return parseJSON(text);
@@ -343,7 +344,7 @@ async function shareOrSave(blob, name, text) {
 
 /* ------------------------------------------------------------------ UI: Edit tab + edit bay */
 const state = { job: null, stage: 'idle', progress: 0, msg: '', finished: [], ctl: null };
-const STAGES = [['ingest', 'Ingestion Agent', 'Loading your clips'], ['analyze', 'Assistant Editor', 'Scanning for shaky, blurry, covered and frozen moments'], ['transcribe', 'Story Editor', 'Transcribing what you say'], ['music', 'Sound Designer', 'Finding the beat and planning music ducking'], ['plan', 'The Editor', 'Planning the cut with Claude'], ['review', 'Dag', 'Your call: approve the plan or correct it'], ['render', 'Render Agent', 'Rendering your edit'], ['qa', 'QA Reviewer', 'Checking the export'], ['done', 'Producer', 'Delivered to the Finished wall']];
+const STAGES = [['ingest', 'Ingestion Agent', 'Loading your clips'], ['analyze', 'Assistant Editor', 'Scanning for shaky, blurry, covered and frozen moments'], ['transcribe', 'Story Editor', 'Transcribing what you say'], ['music', 'Sound Designer', 'Finding the beat and planning music ducking'], ['plan', 'The Editor + Jason Roth', 'Planning the cut with Claude; the Director signs off'], ['review', 'Dag', 'Your call: approve the plan or correct it'], ['render', 'Render Agent', 'Rendering your edit'], ['qa', 'QA Reviewer', 'Checking the export'], ['done', 'Producer', 'Delivered to the Finished wall']];
 const crewFor = { ingest: 'ingest', analyze: 'asst', transcribe: 'story', music: 'sound', plan: 'editor', render: 'render', qa: 'qa', done: 'producer' };
 function setStage(stage, msg, prog = 0) {
   state.stage = stage; state.msg = msg || ''; state.progress = prog;
@@ -360,6 +361,7 @@ export async function editPane(pane) {
   const stageList = STAGES.map(([k, who, what]) => { const idx = STAGES.findIndex(s => s[0] === state.stage), my = STAGES.findIndex(s => s[0] === k); const st = idx > my || state.stage === 'done' ? '✓' : idx === my ? '●' : '○'; return `<div class="note" style="display:flex;gap:8px"><b style="width:14px;color:${st === '●' ? 'var(--accent)' : 'inherit'}">${st}</b><span><b>${esc(who)}</b> · ${esc(what)}${idx === my && state.progress ? ` · ${Math.round(state.progress * 100)}%` : ''}</span></div>`; }).join('');
   const planHtml = j?.segments ? `<div class="card"><div class="top"><span class="who">The cut · ${j.segments.length} shots · ${fmt(j.segments.reduce((a, s) => a + s.out - s.in, 0))}</span></div>
       <span class="note">${esc(j.plan?.summary || '')}</span>
+      ${j.plan?.director_note ? `<span class="note"><b>Jason Roth, Director:</b> ${esc(j.plan.director_note)}</span>` : ''}
       ${j.segments.map((s, i) => { const c = j.clips[s.clip]; const th = c.thumbs.reduce((p, x) => Math.abs(x.t - s.in) < Math.abs(p.t - s.in) ? x : p, c.thumbs[0] || { data: '' }); return `<div style="display:grid;grid-template-columns:64px 1fr;gap:8px;align-items:center"><img src="${th.data}" alt="" style="width:64px;border-radius:6px"><span class="note"><b>${i + 1}. ${esc(c.name.slice(0, 22))}</b> ${fmt(s.in)}–${fmt(s.out)}<br>${esc(s.why)}${s.caption ? ` · caption: “${esc(s.caption)}”` : ''}</span></div>`; }).join('')}
       ${(j.plan?.left_out || []).length ? `<span class="eyebrow">Left out</span>${j.plan.left_out.map(l => `<span class="note">${esc(j.clips[l.clip]?.name || 'clip ' + l.clip)}: ${esc(l.why)}</span>`).join('')}` : ''}
     </div>` : '';
@@ -452,10 +454,10 @@ async function plan() {
   const j = state.job;
   try {
     setStage('plan', 'The Editor and Story Editor are looking at your frames and transcript…');
-    crew('scout', 'Comparing your frames to references'); crew('story', 'Choosing which lines stay');
+    crew('scout', 'Comparing your frames to references'); crew('story', 'Choosing which lines stay'); crew('jason', 'Reviewing the Editor\'s plan');
     const p = await planEdit(j); j.plan = p; j.title = j.opts.title || p.title || ''; j.segments = cleanPlan(j, p);
     if (!j.segments.length) throw new Error('No usable segments came back. Try different clips or notes.');
-    crewDone(['scout', 'story', 'editor']);
+    crewDone(['scout', 'story', 'editor', 'jason']); if (p.director_note) say(`<b>Jason Roth</b> signed off: “${esc(p.director_note.slice(0, 120))}”`);
     say(`<b>The Editor</b> planned a ${fmt(j.segments.reduce((a, s) => a + s.out - s.in, 0))} cut in ${j.segments.length} shots`);
     setStage('review', 'Review the plan. Watch a draft, approve it, or send a correction.');
     crew('dag', 'Reviewing the plan', 600000);
