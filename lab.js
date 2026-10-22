@@ -8,7 +8,7 @@ const link = (s) => s && safe(s.url) ? `<a href="${esc(safe(s.url))}" target="_b
 const fmtK = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'K' : String(n);
 const pct = (a, b) => a == null || !b ? '–' : (a / b * 100).toFixed(a / b < 0.01 ? 2 : 1) + '%';
 const H = () => window.__hq;
-let lab = null, err = '', view = 'style', recipeId = 'house', applying = false, applied = null;
+let lab = null, err = '', view = 'style', recipeId = 'house', sceneId = 'golden', applying = false, applied = null;
 try { view = localStorage.getItem('sbdnj-learn-view') || 'style'; recipeId = localStorage.getItem('sbdnj-recipe') || 'house'; } catch {}
 
 async function load() {
@@ -69,6 +69,15 @@ function viewRecipes() {
       <textarea id="rPrompt" readonly rows="4">${esc(promptFor(r))}</textarea><button id="rCopy">Copy prompt</button></div>`;
 }
 
+function viewCamera() {
+  const c = lab.camera || {}, ss = c.scenes || []; const s = ss.find(x => x.id === sceneId) || ss[0]; if (!s) return '<div class="card"><span class="note">No settings yet.</span></div>';
+  return `<span class="note">${esc(c.note)}</span>
+    <div class="chips">${ss.map(x => `<button data-scene="${esc(x.id)}" aria-pressed="${x.id === s.id}">${esc(x.name)}</button>`).join('')}</div>
+    <div class="card"><div class="top"><span class="who" style="font-size:14px">${esc(s.name)}</span><span class="when">${esc(s.kind)}</span></div><span class="note">${esc(s.when)}</span></div>
+    <div class="card"><span class="who">Canon</span><div class="grades" style="grid-template-columns:auto 1fr;font-size:12px">${(s.canon || []).map(r => `<span class="note">${esc(r[0])}</span><b>${esc(r[1])}</b>`).join('')}</div></div>
+    <div class="card"><span class="who">iPhone</span>${(s.iphone || []).map(t => `<span>· ${esc(t)}</span>`).join('')}</div>
+    <div class="card"><span class="who">Why</span><span>${esc(s.why)}</span><span class="note">Sources: ${(s.sources || []).map(link).join(' · ')}</span></div>`;
+}
 function viewLearning() {
   const p = lab.practice || [], r = lab.research || [], pb = lab.playbook || [];
   return `
@@ -106,10 +115,11 @@ function viewLearning() {
 function pane(el) {
   if (!lab) { el.innerHTML = `<div class="card"><span class="note">${esc(err || 'Loading what the studio has learned…')}</span></div>`; if (!err) load().then(() => { if (H()?.currentTab?.() === 'learn') pane(el); }); return; }
   el.innerHTML = `<span class="eyebrow">Always learning</span>
-    <div class="chips" role="tablist">${[['style', 'My style'], ['recipes', 'Recipes'], ['learning', 'Studio learning']].map(([k, n]) => `<button data-view="${k}" aria-pressed="${view === k}">${n}</button>`).join('')}</div>
-    ${view === 'recipes' ? viewRecipes() : view === 'learning' ? viewLearning() : viewStyle()}`;
+    <div class="chips" role="tablist">${[['style', 'My style'], ['recipes', 'Recipes'], ['camera', 'Camera'], ['learning', 'Studio learning']].map(([k, n]) => `<button data-view="${k}" aria-pressed="${view === k}">${n}</button>`).join('')}</div>
+    ${view === 'recipes' ? viewRecipes() : view === 'camera' ? viewCamera() : view === 'learning' ? viewLearning() : viewStyle()}`;
   el.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { view = b.dataset.view; try { localStorage.setItem('sbdnj-learn-view', view); } catch {} pane(el); el.scrollTop = 0; }));
   el.querySelectorAll('[data-recipe]').forEach(b => b.addEventListener('click', () => { recipeId = b.dataset.recipe; applied = null; try { localStorage.setItem('sbdnj-recipe', recipeId); } catch {} pane(el); }));
+  el.querySelectorAll('[data-scene]').forEach(b => b.addEventListener('click', () => { sceneId = b.dataset.scene; pane(el); }));
   const copy = el.querySelector('#rCopy');
   if (copy) copy.addEventListener('click', async () => { const t = el.querySelector('#rPrompt'); try { await navigator.clipboard.writeText(t.value); copy.textContent = 'Copied'; } catch { t.select(); copy.textContent = 'Selected, tap Copy'; } });
   const file = el.querySelector('#rFile');

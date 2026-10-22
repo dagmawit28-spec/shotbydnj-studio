@@ -850,5 +850,334 @@
    ],
    "tested": "Fixed the flat Glacier shot. First try followed Canon's +EV tip and blew the snow white; second try only removed the blue cast and protected the brightest snow. Kept, small gain."
   }
- ]
+ ],
+ "camera": {
+  "note": "Settings for a Canon with its kit lens and no ND filter. If your Canon is APS-C (Rebel, R50, R10, R7, 90D), multiply the lens length by 1.6 when you use the handheld shutter rule. Tell the studio your exact model and it will tune these.",
+  "staff": [
+   {
+    "id": "photoset",
+    "name": "Photo Settings Tech",
+    "role": "Aperture, shutter, ISO for stills",
+    "desc": "Picks the exact mode, aperture, shutter, ISO and white balance for each kind of photo you take, based on camera makers' guides.",
+    "tasks": [
+     "Writing the golden hour settings card",
+     "Checking the handheld shutter rule for a 50mm",
+     "Testing -1.5 EV on a backlit sky",
+     "Setting Shade white balance for sunset",
+     "Building the snow settings card"
+    ]
+   },
+   {
+    "id": "videoset",
+    "name": "Video Settings Tech",
+    "role": "Frame rate, shutter & exposure for video",
+    "desc": "Locks in video settings: 24fps at 1/50 for cinematic motion, fixed white balance, and how to expose bright daylight without an ND filter.",
+    "tasks": [
+     "Setting 24p at 1/50 for the next Reel",
+     "Working out daylight exposure without ND",
+     "Fixing white balance so clips match",
+     "Checking IS for walking shots",
+     "Planning night video settings"
+    ]
+   }
+  ],
+  "scenes": [
+   {
+    "id": "golden",
+    "name": "Golden hour / backlit",
+    "kind": "Photo",
+    "when": "Sunset or sunrise with the sun behind the person. Your signature shot.",
+    "canon": [
+     [
+      "Mode",
+      "Av (aperture priority)"
+     ],
+     [
+      "Aperture",
+      "f/2.8–4 for a person, f/8 for a landscape"
+     ],
+     [
+      "ISO",
+      "100–400"
+     ],
+     [
+      "Exposure comp",
+      "-1 to -2"
+     ],
+     [
+      "White balance",
+      "Daylight or Shade (not Auto)"
+     ],
+     [
+      "Metering",
+      "Spot on the bright sky next to the sun"
+     ]
+    ],
+    "iphone": [
+     "Tap the person, then drag the sun icon down until the sky keeps its color.",
+     "Shoot a second one a little brighter as a backup."
+    ],
+    "why": "Negative exposure keeps the sky from blowing out; Daylight/Shade white balance keeps the warmth Auto would remove.",
+    "sources": [
+     {
+      "name": "Nikon: Golden hour with backlighting",
+      "url": "https://www.nikon.co.uk/en_GB/learn-and-explore/magazine/tips-and-tricks/make-the-most-of-golden-hour-with-backlighting"
+     }
+    ]
+   },
+   {
+    "id": "travel",
+    "name": "Travel daylight",
+    "kind": "Photo",
+    "when": "Landscapes, cities and people in normal daylight.",
+    "canon": [
+     [
+      "Mode",
+      "Av"
+     ],
+     [
+      "Aperture",
+      "f/8"
+     ],
+     [
+      "ISO",
+      "100"
+     ],
+     [
+      "Shutter",
+      "Let the camera pick; at least 1/(lens mm × 1.6)"
+     ],
+     [
+      "White balance",
+      "Daylight"
+     ],
+     [
+      "Format",
+      "RAW + JPEG"
+     ]
+    ],
+    "iphone": [
+     "Tap to focus on what matters, then nudge exposure down a little if the sky looks white."
+    ],
+    "why": "f/8 keeps a whole scene sharp. The handheld rule (1 ÷ focal length, times crop factor) avoids shake blur.",
+    "sources": [
+     {
+      "name": "Glass: Reciprocal rule",
+      "url": "https://glass.photo/photography-terms/reciprocal-rule"
+     },
+     {
+      "name": "Canon: 7 top tips for low-light photography",
+      "url": "https://canon-europe.com/get-inspired/tips-and-techniques/low-light-photography"
+     }
+    ]
+   },
+   {
+    "id": "portrait",
+    "name": "Portrait, blurry background",
+    "kind": "Photo",
+    "when": "One person, you want them to pop.",
+    "canon": [
+     [
+      "Mode",
+      "Av"
+     ],
+     [
+      "Aperture",
+      "Widest your lens allows (f/1.8 on a 50mm)"
+     ],
+     [
+      "ISO",
+      "Auto"
+     ],
+     [
+      "Shutter",
+      "1/250 or faster"
+     ],
+     [
+      "Focus",
+      "Single-point AF on the eye"
+     ],
+     [
+      "White balance",
+      "Auto"
+     ]
+    ],
+    "iphone": [
+     "Use Portrait mode and keep 3–8 feet from the person."
+    ],
+    "why": "The widest aperture gives the shallowest focus and the most background blur. Nikon's example: f/1.8, 1/400, ISO auto.",
+    "sources": [
+     {
+      "name": "Nikon: Blurring backgrounds with a prime lens",
+      "url": "https://imaging.nikon.com/imaging/support/digitutor/z_5/techniques/201801_22_12_ml/still_1.html"
+     }
+    ]
+   },
+   {
+    "id": "cinematic",
+    "name": "Cinematic video",
+    "kind": "Video",
+    "when": "Reels and short films where motion should look like a movie.",
+    "canon": [
+     [
+      "Mode",
+      "Movie, Manual exposure"
+     ],
+     [
+      "Frame rate",
+      "24p (23.98)"
+     ],
+     [
+      "Shutter",
+      "1/50"
+     ],
+     [
+      "ISO",
+      "100 in daylight"
+     ],
+     [
+      "Aperture",
+      "Close it (f/8–f/11) to expose daylight since you have no ND"
+     ],
+     [
+      "White balance",
+      "Daylight, fixed so clips match"
+     ]
+    ],
+    "iphone": [
+     "Use Cinematic mode or 24 fps in Settings > Camera > Record Video.",
+     "Lock exposure before you hit record so it doesn't pump."
+    ],
+    "why": "The 180° rule (shutter = 2 × frame rate) gives natural motion blur. Without an ND filter, the aperture is your only way to keep daylight from blowing out, or shoot near golden hour.",
+    "sources": [
+     {
+      "name": "Australian Photography: The 180 degree shutter rule",
+      "url": "https://www.australianphotography.com/photo-tips/video-tips-the-180-degree-shutter-rule"
+     }
+    ]
+   },
+   {
+    "id": "night",
+    "name": "Night & city lights",
+    "kind": "Photo",
+    "when": "After dark, streets, neon, indoor.",
+    "canon": [
+     [
+      "Mode",
+      "Av"
+     ],
+     [
+      "Aperture",
+      "Widest your lens allows"
+     ],
+     [
+      "ISO",
+      "Raise only after the aperture is wide; 1600–6400"
+     ],
+     [
+      "Shutter",
+      "1/50 still subject, 1/250 walking people"
+     ],
+     [
+      "White balance",
+      "Tungsten at twilight, Auto otherwise"
+     ],
+     [
+      "Format",
+      "RAW"
+     ]
+    ],
+    "iphone": [
+     "Hold still for Night mode, or rest the phone on something solid."
+    ],
+    "why": "Canon: open the aperture first, then raise ISO; lean on a wall or set the camera down; shoot RAW to fix color later.",
+    "sources": [
+     {
+      "name": "Canon: 7 top tips for low-light photography",
+      "url": "https://canon-europe.com/get-inspired/tips-and-techniques/low-light-photography"
+     }
+    ]
+   },
+   {
+    "id": "snow",
+    "name": "Snow & bright scenes",
+    "kind": "Photo",
+    "when": "Snow, white sand, bright overcast.",
+    "canon": [
+     [
+      "Mode",
+      "Av"
+     ],
+     [
+      "Aperture",
+      "f/8"
+     ],
+     [
+      "Exposure comp",
+      "+1/3 to +2 (check the histogram)"
+     ],
+     [
+      "White balance",
+      "Cloudy or Shade to remove the blue cast"
+     ],
+     [
+      "ISO",
+      "100"
+     ]
+    ],
+    "iphone": [
+     "Drag the sun icon up a little if snow looks gray, but stop before the texture disappears."
+    ],
+    "why": "Cameras make snow gray, so add exposure, but if the histogram hits the right edge, pull back.",
+    "sources": [
+     {
+      "name": "Canon USA: Photographing snow",
+      "url": "https://www.usa.canon.com/learning/training-articles/training-articles-list/photographing-snow"
+     }
+    ]
+   },
+   {
+    "id": "walking",
+    "name": "Walking / handheld video",
+    "kind": "Video",
+    "when": "Following someone on a trail or through a city.",
+    "canon": [
+     [
+      "Mode",
+      "Movie, Manual"
+     ],
+     [
+      "Frame rate",
+      "24p or 30p"
+     ],
+     [
+      "Shutter",
+      "1/50 at 24p, 1/60 at 30p"
+     ],
+     [
+      "Stabilizer",
+      "Lens IS on, Movie digital IS on"
+     ],
+     [
+      "Focus",
+      "Movie Servo AF on the person"
+     ]
+    ],
+    "iphone": [
+     "Turn on Action mode for very shaky walks."
+    ],
+    "why": "Optical IS lets you keep the 180° shutter while handheld; the shutter rule stays the same for video.",
+    "sources": [
+     {
+      "name": "Canon: 7 top tips for low-light photography",
+      "url": "https://canon-europe.com/get-inspired/tips-and-techniques/low-light-photography"
+     },
+     {
+      "name": "Australian Photography: The 180 degree shutter rule",
+      "url": "https://www.australianphotography.com/photo-tips/video-tips-the-180-degree-shutter-rule"
+     }
+    ]
+   }
+  ]
+ }
 }

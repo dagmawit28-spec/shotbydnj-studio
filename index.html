@@ -220,6 +220,7 @@ details.grp[open]>summary::before{content:'▾ '}
   <button data-room="rec">Fun / Pool Lounge</button>
   <button data-room="espresso">Espresso Bar</button>
   <button data-room="lab" hidden>Learning Lab</button>
+  <button data-room="cam" hidden>Camera Room</button>
   <span style="width:1px;height:22px;background:var(--edge)"></span>
   <button id="camEye" aria-pressed="true">Eye level</button>
   <button id="camSec">Security cam</button>
@@ -1513,11 +1514,13 @@ function updateCrew(dt) {
   for (const d of DOOR.panels) d.g.position.x = DOOR.x + d.s * (0.32 + DOOR.open * 0.6);
 }
 const WING = { on: false, x0: 0, x1: 0, z0: 0 };
+const CAMW = { on: false, x0: 0, x1: 0, z0: 0 }; let LABDATA = null;
 function zoneOf(p) { const { x, z } = p.entry.model.position;
+  if (CAMW.on && x >= CAMW.x0 && x <= CAMW.x1 && z < BLD.z0 && z >= CAMW.z0) return 'cam';
   if (WING.on && x >= WING.x0 && x <= WING.x1 && z < BLD.z0 && z >= WING.z0) return 'lab';
   if (x < BLD.x0 || x > BLD.x1 || z < BLD.z0 || z > BLD.z1) return 'outside';
   if (x >= 2) return z < -1 ? 'boss' : 'board'; if (z > 3) return x < -5 ? 'rec' : 'espresso'; return 'bullpen'; }
-const ZONE_NAME = { lab: 'Learning Lab', outside: 'Outside', boss: "Boss's Office", board: 'Boardroom', rec: 'Fun / Pool Lounge', espresso: 'Espresso Bar', bullpen: 'Editing Bullpen' };
+const ZONE_NAME = { cam: 'Camera Room', lab: 'Learning Lab', outside: 'Outside', boss: "Boss's Office", board: 'Boardroom', rec: 'Fun / Pool Lounge', espresso: 'Espresso Bar', bullpen: 'Editing Bullpen' };
 
 /* =========================================================================
    KUDOS
@@ -1741,7 +1744,7 @@ function personCard(p) {
 const OPEN_GROUPS = new Set();
 function paneCrew() {
   const groups = {}; PEOPLE.forEach(p => (groups[ZONE_NAME[zoneOf(p)]] ||= []).push(p));
-  const order = ['Editing Bullpen', 'Learning Lab', "Boss's Office", 'Boardroom', 'Espresso Bar', 'Fun / Pool Lounge', 'Outside'];
+  const order = ['Editing Bullpen', 'Learning Lab', 'Camera Room', "Boss's Office", 'Boardroom', 'Espresso Bar', 'Fun / Pool Lounge', 'Outside'];
   const list = order.filter(g => groups[g]).map(g => `<details class="grp" data-g="${esc(g)}"${OPEN_GROUPS.has(g) ? ' open' : ''}><summary class="group">${esc(g)} · ${groups[g].length}</summary>` + groups[g].map(p => { const nk = kudosFor(p.id).length; return `<button class="person" data-pid="${esc(p.id)}"><span class="d" style="background:${p.id === 'dag' ? 'var(--accent)' : 'var(--cool)'}"></span><span><b>${esc(p.name)}${nk ? ` <span style="color:var(--accent)">★${nk}</span>` : ''}</b><small>${esc(p.role)}</small><span class="now${performance.now() < p.realUntil ? ' real' : ''}" data-now="${esc(p.id)}">${esc(statusOf(p))}</span></span></button>`; }).join('') + '</details>').join('');
   const sel = selectedId && byId(selectedId);
   pane.innerHTML = `<span class="eyebrow">Live floor</span><h2>What the crew is doing</h2>
@@ -1883,7 +1886,7 @@ async function boot() {
     // LEARNING LAB WING: grows one bay (4 desks) per 4 specialists the studio hires as it learns (lab/lab.json, written nightly)
     try {
       const L = await (await fetch('lab/lab.json?t=' + Date.now(), { cache: 'no-store' })).json();
-      const hires = (Array.isArray(L.hires) ? L.hires : []).slice(0, 16);
+      const hires = (Array.isArray(L.hires) ? L.hires : []).slice(0, 12); LABDATA = L;
       if (hires.length) {
         const bays = Math.ceil(hires.length / 4), BW = 7, z0 = BLD.z0, z1 = BLD.z0 - 6.2, x0 = BLD.x0, x1 = BLD.x0 + bays * BW;
         WING.on = true; WING.x0 = x0; WING.x1 = x1; WING.z0 = z1; IN.bounds.z0 = z1 + 0.35;
@@ -1910,6 +1913,76 @@ async function boot() {
         ROOMS.lab = { eye: [[x0 + 1.2, 1.62, z0 - 0.6], [x1 - 1.5, 1.0, z1 + 2.2]], sec: [[x1 - 0.6, 3.0, z0 - 0.5], [x0 + 2, 0.5, z1 + 2]] };
       }
     } catch (e) { console.warn('learning lab', e); }
+    // CAMERA SETTINGS WING (east end of the north side) + 3D camera models + settings board
+    try {
+      const L = LABDATA || await (await fetch('lab/lab.json?t=' + Date.now(), { cache: 'no-store' })).json(); LABDATA = L;
+      const C = L.camera || {}, x0 = 7, x1 = BLD.x1, z0 = BLD.z0, z1 = BLD.z0 - 6.2, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, ww = x1 - x0, dd = z0 - z1;
+      CAMW.on = true; CAMW.x0 = x0; CAMW.x1 = x1; CAMW.z0 = z1; IN.bounds.z0 = Math.min(IN.bounds.z0, z1 + 0.35);
+      box(ww + 0.6, 0.3, dd + 0.3, M.concreteDark, cx, -0.15, cz - 0.15, hq, { cast: false });
+      { const f = new THREE.Mesh(new THREE.PlaneGeometry(ww, dd), M.carpet); f.rotation.x = -Math.PI / 2; f.position.set(cx, 0.005, cz); f.receiveShadow = true; hq.add(f); }
+      box(ww + 0.6, 0.32, dd + 0.3, M.concreteDark, cx, BLD.h + 0.16, cz - 0.15, hq);
+      box(ww + 0.6, 0.75, 0.3, M.blackMatte, cx, BLD.h + 0.37, z1 - 0.15, hq);
+      curtainWall(x0, z1, x1, z1); curtainWall(x0, z0, x0, z1); curtainWall(x1, z1, x1, z0);
+      for (const [x, z] of [[x0, z1], [x1, z1], [x0, z0]]) box(0.4, BLD.h + 0.7, 0.4, M.steel, x, (BLD.h + 0.7) / 2, z, hq);
+      // a 3D camera model (Canon-style body, grip, lens, dials)
+      const camMat = new THREE.MeshStandardMaterial({ color: 0x17181b, roughness: 0.55, metalness: 0.2 }), glassMat = new THREE.MeshStandardMaterial({ color: 0x0b1626, roughness: 0.05, metalness: 0.9 }), red = new THREE.MeshStandardMaterial({ color: 0xb3261e, roughness: 0.5 });
+      function cameraModel(s) {
+        const g = new THREE.Group();
+        roundedBox(0.15 * s, 0.1 * s, 0.075 * s, 0.012 * s, camMat, 0, 0, 0, g);
+        roundedBox(0.04 * s, 0.1 * s, 0.09 * s, 0.015 * s, camMat, -0.06 * s, -0.003 * s, 0.01 * s, g);
+        box(0.05 * s, 0.035 * s, 0.05 * s, camMat, 0, 0.065 * s, -0.005 * s, g);
+        cyl(0.034 * s, 0.034 * s, 0.09 * s, 32, camMat, 0.01 * s, -0.004 * s, 0.08 * s, g, { rx: Math.PI / 2 });
+        cyl(0.038 * s, 0.038 * s, 0.02 * s, 32, camMat, 0.01 * s, -0.004 * s, 0.11 * s, g, { rx: Math.PI / 2 });
+        cyl(0.028 * s, 0.028 * s, 0.004 * s, 32, glassMat, 0.01 * s, -0.004 * s, 0.122 * s, g, { rx: Math.PI / 2 });
+        cyl(0.036 * s, 0.036 * s, 0.006 * s, 32, red, 0.01 * s, -0.004 * s, 0.098 * s, g, { rx: Math.PI / 2 });
+        for (const dx of [-0.045, 0.045]) cyl(0.013 * s, 0.013 * s, 0.012 * s, 20, M.brushed, dx * s, 0.056 * s, 0.005 * s, g);
+        cyl(0.006 * s, 0.006 * s, 0.006 * s, 12, M.brushed, -0.06 * s, 0.054 * s, 0.03 * s, g);
+        return g;
+      }
+      // hero model on a plinth, slowly turning
+      cyl(0.45, 0.5, 0.9, 40, M.blackGloss, cx + 0.6, 0.45, cz - 0.4, hq);
+      const hero = cameraModel(4); hero.position.set(cx + 0.6, 1.13, cz - 0.4); hq.add(hero);
+      mixers.push({ update: dt => { hero.rotation.y += dt * 0.35; } });
+      // display counter with three cameras along the back glass
+      roundedBox(5.2, 0.06, 0.7, 0.015, M.walnut, cx + 0.3, 0.92, z1 + 0.75, hq); box(5.0, 0.86, 0.6, M.blackMatte, cx + 0.3, 0.45, z1 + 0.75, hq);
+      [-1.6, 0.3, 2.2].forEach((dx, i) => { const c = cameraModel(1.8); c.position.set(cx + dx, 1.05, z1 + 0.75); c.rotation.y = 0.4 - i * 0.3; hq.add(c); });
+      // settings board
+      { const scenes = (Array.isArray(C.scenes) ? C.scenes : []).slice(0, 4);
+        const cv = makeCanvas(1024, 640), g = cv.getContext('2d'); g.fillStyle = '#0b0c0e'; g.fillRect(0, 0, 1024, 640);
+        g.fillStyle = '#E8A33D'; g.font = '700 54px system-ui, sans-serif'; g.fillText('CAMERA SETTINGS', 40, 80);
+        scenes.forEach((s, i) => { const y = 150 + i * 120; g.fillStyle = '#F1ECE4'; g.font = '600 36px system-ui, sans-serif'; g.fillText(String(s.name || '').slice(0, 30), 40, y);
+          g.fillStyle = '#9aa4b2'; g.font = '400 28px system-ui, sans-serif'; g.fillText((s.canon || []).slice(0, 4).map(r => String(r[1]).split(/[,(]/)[0].trim()).join('  ·  ').slice(0, 64), 40, y + 44); });
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2.0), new THREE.MeshBasicMaterial({ map: tex(cv), toneMapped: false })); m.position.set(x0 + 1.9, 2.1, z1 + 0.12); hq.add(m); }
+      // staff desk
+      const dz = z0 - 2.0; roundedBox(3.4, 0.045, 0.85, 0.012, M.walnut, x1 - 2.4, 0.745, dz, hq); for (const s of [-1, 1]) box(0.08, 0.7, 0.08, M.steel, x1 - 2.4 + s * 1.5, 0.36, dz, hq);
+      (Array.isArray(C.staff) ? C.staff : []).slice(0, 2).forEach((st, i) => {
+        const x = x1 - 3.2 + i * 1.6; box(0.62, 0.38, 0.03, M.blackMatte, x, 1.02, dz - 0.25, hq); officeChair(x, dz + 0.78, 0);
+        const id = 'cam_' + String(st.id || i).replace(/[^a-z0-9_]/gi, '').slice(0, 40); if (byId(id)) return;
+        POOLS[id] = (Array.isArray(st.tasks) ? st.tasks : ['Writing settings cards']).slice(0, 8).map(t => String(t).slice(0, 90)); DESC[id] = String(st.desc || '').slice(0, 300);
+        register(spawn(xbot, { xbot: true, hue: 0.08 + i * 0.4, x, y: -0.47, z: dz + 0.73, ry: Math.PI, clip: 'idle', sit: true, typing: true, speed: 0.8 }), id, String(st.name || 'Settings Tech').slice(0, 40), String(st.role || '').slice(0, 60), 'Camera Room', { kind: 'seat', seat: [x, dz + 0.73], y: -0.47, ry: Math.PI, node: null });
+      });
+      { const c = makeCanvas(1024, 128), g = c.getContext('2d'); g.fillStyle = '#0b0c0e'; g.fillRect(0, 0, 1024, 128); g.fillStyle = '#E8A33D'; g.font = '700 64px system-ui, sans-serif'; g.textBaseline = 'middle'; g.fillText('CAMERA ROOM', 36, 66);
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.52), new THREE.MeshBasicMaterial({ map: tex(c), toneMapped: false })); m.position.set(x1 - 2.6, 3.0, z1 + 0.12); hq.add(m); }
+      const rb = document.querySelector('[data-room="cam"]'); if (rb) rb.hidden = false;
+      ROOMS.cam = { eye: [[x0 + 0.8, 1.62, z0 - 0.6], [cx + 0.6, 1.0, z1 + 1.2]], sec: [[x1 - 0.5, 3.0, z0 - 0.4], [x0 + 2, 0.6, z1 + 1.5]] };
+    } catch (e) { console.warn('camera wing', e); }
+    // CAMERON PANA, construction lead: builds every new desk and wing
+    try {
+      const hires = (LABDATA?.hires || []).slice(0, 12), bays = Math.max(1, Math.ceil(hires.length / 4)), full = hires.length && hires.length % 4 === 0;
+      const bx = WING.on ? Math.min(BLD.x0 + bays * 7 - 0.9, 6.2) : -6, bz = BLD.z0 - 1.4;
+      const cone = new THREE.MeshStandardMaterial({ color: 0xff6a13, roughness: 0.6 });
+      for (const [dx, dz] of [[0.7, -0.5], [-0.5, -0.8]]) cyl(0.02, 0.16, 0.45, 20, cone, bx + dx, 0.225, bz + dz, hq);
+      box(0.5, 0.22, 0.25, cone, bx - 0.6, 0.11, bz + 0.3, hq);
+      const e = spawn(soldier, { x: bx, z: bz, ry: -Math.PI / 2, clip: 'Idle' });
+      const hat = new THREE.Group(); const yel = new THREE.MeshStandardMaterial({ color: 0xf2c200, roughness: 0.45 });
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.13, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), yel); dome.position.y = 0.0; hat.add(dome);
+      const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.012, 28), yel); brim.position.y = 0.0; hat.add(brim); scene.add(hat);
+      e.phones = hat; e.headBone = bone(e.model, 'Head'); phones.push(e);
+      POOLS.cameron = [full ? 'Measuring for the next Learning Lab bay' : `Building desk ${hires.length + 1} in the Learning Lab`, 'Running power to the new desks', 'Hanging glass on the Camera Room', 'Checking the wing roof', 'Unboxing chairs for the next hires', 'Leveling the new floor'];
+      DESC.cameron = 'Construction lead. Every time the studio hires a specialist, Cameron builds the desk. Every 4 hires he adds a new bay to the Learning Lab. He also built the Camera Room.';
+      register(e, 'cameron', 'Cameron Pana', 'Construction lead', 'Learning Lab', { kind: 'stand', pos: [bx, bz], ry: -Math.PI / 2, node: null, clip: 'idle' });
+      log(`<b>Cameron Pana</b> has built ${hires.length} Learning Lab desk${hires.length === 1 ? '' : 's'} in ${bays} bay${bays === 1 ? '' : 's'}, plus the Camera Room`, true);
+    } catch (e) { console.warn('cameron', e); }
     PEOPLE.forEach((p, i) => { p.until = performance.now() + 1500 + i * 700; nextActivity(p, true); p.nextTrip = performance.now() + (p.id === 'producer' ? 3000 : 6000 + i * 2600 + Math.random() * 8000); });
     log('<b>Studio</b> lights on, ' + PEOPLE.length + ' people in the building');
   } catch (err) {
