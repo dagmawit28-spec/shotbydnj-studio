@@ -13,6 +13,7 @@
 #settings input{width:100%;box-sizing:border-box;background:rgba(0,0,0,.4);color:#F1ECE4;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:10px;font:inherit}</style>
 <script>/* Standalone runtime: replaces the Claude artifact runtime so the app runs on its own (data stays on this device). */
 (() => {
+  window.__STANDALONE = true;
   const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
   // ---------- tiny IndexedDB blob store for Drop Zone files ----------
   const idb = new Promise((res) => { try { const r = indexedDB.open('sbdnj-hq', 1); r.onupgradeneeded = () => r.result.createObjectStore('blobs'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch { res(null); } });
@@ -21,7 +22,7 @@
   const putBlob = (id, blob) => idb.then(db => new Promise((res, rej) => { if (!db) return rej({ code: 'quota_or_state' }); const tx = db.transaction('blobs', 'readwrite'); tx.objectStore('blobs').put(blob, id); tx.oncomplete = res; tx.onerror = () => rej({ code: 'quota_or_state' }); }));
   const delBlob = id => idb.then(db => new Promise(res => { if (!db) return res(); const tx = db.transaction('blobs', 'readwrite'); tx.objectStore('blobs').delete(id); tx.oncomplete = res; tx.onerror = res; }));
   const assets = {
-    async upload(file) { if (file.size > 200 * 1024 * 1024) throw { code: 'too_large' }; const id = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''); await putBlob(id, file); URLS[id] = URL.createObjectURL(file); return { id, url: URLS[id], sizeBytes: file.size, contentType: file.type }; },
+    async upload(file) { if (file.size > 2048 * 1024 * 1024) throw { code: 'too_large' }; const id = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''); await putBlob(id, file); URLS[id] = URL.createObjectURL(file); return { id, url: URLS[id], sizeBytes: file.size, contentType: file.type }; },
     async delete(id) { await delBlob(id); if (URLS[id]) URL.revokeObjectURL(URLS[id]); delete URLS[id]; return { deleted: true }; },
     async list() { return { assets: [], usage: {} }; },
   };
@@ -1753,8 +1754,8 @@ function paneDrop() {
       ${assets ? `<select data-status aria-label="Status">${STATUSES.map(x => `<option${x === d.status ? ' selected' : ''}>${x}</option>`).join('')}</select><button data-del>Delete</button><div data-conf></div>` : `<span class="tag" style="align-self:flex-start">${esc(d.status)}</span>`}</div>`; }).join('');
   pane.innerHTML = `<span class="eyebrow" style="color:var(--cool)">Drop Zone · AI-free</span><h2>Content for @shotbydnj</h2>
     <p class="note">Files here stay on this page only. <b>Nothing in the Drop Zone is sent to Claude or the crew.</b></p>
-    ${assets ? `<label for="dFiles" class="dropbox" id="dTarget"><b>Drop photos or videos</b><span class="note">or click to pick · JPG, PNG, WebP, MP4, WebM · up to 20 MB each</span></label>
-      <input type="file" id="dFiles" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" hidden>
+    ${assets ? `<label for="dFiles" class="dropbox" id="dTarget"><b>Drop photos or videos</b><span class="note">${window.__STANDALONE ? "or tap to pick · any photo or video from your phone (HEIC, JPG, MOV, MP4…)" : "or click to pick · JPG, PNG, WebP, MP4, WebM · up to 20 MB each"}</span></label>
+      <input type="file" id="dFiles" multiple accept="${window.__STANDALONE ? "image/*,video/*" : "image/jpeg,image/png,image/webp,video/mp4,video/webm"}" hidden>
       <input id="dNote" maxlength="200" placeholder="Optional note, e.g. Rainier hike, July"><p class="note" id="dMsg"></p>` : `<p class="note">${db ? 'Only you (and editors) can add files.' : 'The Drop Zone is unavailable on this device.'}</p>`}
     <div class="row">${['All', ...STATUSES].map(x => `<button data-filter="${x}" aria-pressed="${x === dropFilter}">${x} ${x === 'All' ? drops.length : drops.filter(d => d.status === x).length}</button>`).join('')}</div>
     ${tiles ? `<div class="media">${tiles}</div>` : `<p class="note">${drops.length ? 'Nothing with this status.' : 'No files yet. Each file gets a Raw / Picked / Posted status so you can track what made it to the feed.'}</p>`}`;
@@ -1777,9 +1778,10 @@ async function upload(files) {
   if (!files.length) return; const note = (pane.querySelector('#dNote')?.value || '').trim().slice(0, 200); let ok = 0; const bad = []; uploading = true;
   for (const [i, f] of files.entries()) {
     const m = pane.querySelector('#dMsg'); if (m) m.textContent = `Uploading ${i + 1} of ${files.length}…`;
-    if (!/^(image\/(jpeg|png|webp)|video\/(mp4|webm))$/.test(f.type)) { bad.push(`${f.name} (${/heic|heif|quicktime|\.mov$/i.test(f.type + f.name) ? 'export as JPG or MP4' : 'type not supported'})`); continue; }
-    if (f.size > 20 * 1024 * 1024) { bad.push(`${f.name} (over 20 MB)`); continue; }
-    try { const r = await assets.upload(f); await db.collection('drops').add({ asset: r.id, type: f.type.startsWith('video/') ? 'video' : 'image', name: f.name.slice(0, 120), note, status: 'Raw', at: new Date().toISOString() }); ok++; }
+    const SA = !!window.__STANDALONE, isMedia = /^(image|video)\//.test(f.type) || /\.(heic|heif|jpe?g|png|webp|mov|mp4|m4v|webm)$/i.test(f.name);
+    if (SA ? !isMedia : !/^(image\/(jpeg|png|webp)|video\/(mp4|webm))$/.test(f.type)) { bad.push(`${f.name} (${/heic|heif|quicktime|\.mov$/i.test(f.type + f.name) ? 'export as JPG or MP4' : 'type not supported'})`); continue; }
+    if (f.size > (SA ? 2048 : 20) * 1024 * 1024) { bad.push(`${f.name} (over ${SA ? '2 GB' : '20 MB'})`); continue; }
+    try { const r = await assets.upload(f); await db.collection('drops').add({ asset: r.id, type: (f.type.startsWith('video/') || /\.(mov|mp4|m4v|webm)$/i.test(f.name)) ? 'video' : 'image', name: f.name.slice(0, 120), note, status: 'Raw', at: new Date().toISOString() }); ok++; }
     catch (e) { bad.push(`${f.name} (${e?.code === 'quota_or_state' ? 'storage full' : e?.code === 'too_large' ? 'over 20 MB' : 'upload failed'})`); }
   }
   uploading = false; if (tab === 'drop') paneDrop();
