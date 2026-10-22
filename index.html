@@ -94,7 +94,7 @@
         try { if (navigator.share) { await navigator.share(data); return; } } catch (e) { if (e?.name === 'AbortError') return; }
         try { await navigator.clipboard.writeText(url); sb.textContent = 'Link copied'; } catch { prompt('Copy this link', url); } setTimeout(() => sb.textContent = 'Share app', 2500); }; }
   });
-  if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(reg => { reg.update(); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update(); }); }).catch(() => {}); let __swReloaded = false; navigator.serviceWorker.addEventListener('controllerchange', () => { if (__swReloaded) return; __swReloaded = true; location.reload(); }));
+  if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').then(reg => { reg.update(); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update(); }); }).catch(() => {}); let swReloaded = false; navigator.serviceWorker.addEventListener('controllerchange', () => { if (swReloaded) return; swReloaded = true; location.reload(); }); });
 })();
 </script>
 </head><body>
