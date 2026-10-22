@@ -23,7 +23,10 @@ const FORMATS = {
 const MUTE_DEFAULT = /\bn[i1!]gg(?:a|er|ah|uh|as|ers|az)\b/i;
 
 /* ------------------------------------------------------------------ storage (finished library) */
-const dbp = new Promise(res => { try { const r = indexedDB.open('sbdnj-edits', 1); r.onupgradeneeded = () => r.result.createObjectStore('finished', { keyPath: 'id' }); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch { res(null); } });
+const dbp = new Promise(res => { try { const r = indexedDB.open('sbdnj-edits', 2); r.onupgradeneeded = () => { const d = r.result; for (const n of ['finished', 'presets', 'methods']) if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath: 'id' }); }; r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch { res(null); } });
+async function putIn(store, item) { const db = await dbp; if (!db) return; await new Promise(r => { const tx = db.transaction(store, 'readwrite'); tx.objectStore(store).put(item); tx.oncomplete = r; tx.onerror = r; }); }
+async function allIn(store) { const db = await dbp; if (!db) return []; return new Promise(r => { const out = []; const tx = db.transaction(store, 'readonly'); const c = tx.objectStore(store).openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out.push(cur.value); cur.continue(); } else r(out.sort((a, b) => b.at - a.at)); }; c.onerror = () => r(out); }); }
+async function delIn(store, id) { const db = await dbp; if (!db) return; await new Promise(r => { const tx = db.transaction(store, 'readwrite'); tx.objectStore(store).delete(id); tx.oncomplete = r; tx.onerror = r; }); }
 async function saveFinished(item) { const db = await dbp; if (!db) return; await new Promise(r => { const tx = db.transaction('finished', 'readwrite'); tx.objectStore('finished').put(item); tx.oncomplete = r; tx.onerror = r; }); }
 async function listFinished() { const db = await dbp; if (!db) return []; return new Promise(r => { const out = []; const tx = db.transaction('finished', 'readonly'); const c = tx.objectStore('finished').openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out.push(cur.value); cur.continue(); } else r(out.sort((a, b) => b.at - a.at)); }; c.onerror = () => r(out); }); }
 async function deleteFinished(id) { const db = await dbp; if (!db) return; await new Promise(r => { const tx = db.transaction('finished', 'readwrite'); tx.objectStore('finished').delete(id); tx.oncomplete = r; tx.onerror = r; }); }
@@ -39,6 +42,48 @@ const once = (el, ev) => new Promise(r => el.addEventListener(ev, r, { once: tru
 async function seek(v, t) { if (Math.abs(v.currentTime - t) < 0.02 && v.readyState >= 2) return; const p = once(v, 'seeked'); v.currentTime = t; await Promise.race([p, sleep(3000)]); }
 async function loadMeta(v) { if (v.readyState >= 1) return; await Promise.race([once(v, 'loadedmetadata'), sleep(15000)]); }
 
+/* ------------------------------------------------------------------ presets: LUTs (.cube), Lightroom (.xmp), methods */
+let PRESETS = [], METHODS = [];
+const NEUTRAL = { contrast: 0, sat: 1, warm: 0, lift: 0, roll: 0, sh: [0, 0, 0], hi: [0, 0, 0], grain: 0.015 };
+function parseCube(text) {
+  let N = 0, dmin = [0, 0, 0], dmax = [1, 1, 1]; const vals = [];
+  for (const line of text.split(/\r?\n/)) { const l = line.trim(); if (!l || l[0] === '#') continue;
+    if (/^LUT_3D_SIZE/i.test(l)) N = +l.split(/\s+/)[1]; else if (/^DOMAIN_MIN/i.test(l)) dmin = l.split(/\s+/).slice(1).map(Number); else if (/^DOMAIN_MAX/i.test(l)) dmax = l.split(/\s+/).slice(1).map(Number);
+    else if (/^[-\d.]/.test(l)) { const p = l.split(/\s+/).map(Number); if (p.length >= 3 && p.every(Number.isFinite)) vals.push(p[0], p[1], p[2]); } }
+  if (!N || vals.length < N * N * N * 3) throw new Error('That .cube file is not a 3D LUT this editor can read.');
+  const data = new Uint8Array(N * N * N * 4);
+  for (let i = 0; i < N * N * N; i++) { for (let k = 0; k < 3; k++) data[i * 4 + k] = Math.round(clamp((vals[i * 3 + k] - dmin[k]) / ((dmax[k] - dmin[k]) || 1), 0, 1) * 255); data[i * 4 + 3] = 255; }
+  return { N, data };
+}
+function parseXMP(text) {
+  const get = (k, d = 0) => { const m = text.match(new RegExp('crs:' + k + '="([^"]*)"')) || text.match(new RegExp('<crs:' + k + '>([^<]*)</crs:' + k + '>')); const v = m ? parseFloat(m[1]) : NaN; return Number.isFinite(v) ? v : d; };
+  const exp = get('Exposure2012', get('Exposure', 0)), con = get('Contrast2012', get('Contrast', 0)), hi = get('Highlights2012', 0), sh = get('Shadows2012', 0), wh = get('Whites2012', 0), bl = get('Blacks2012', 0);
+  const it = get('IncrementalTemperature', NaN), ta = get('Temperature', NaN), vib = get('Vibrance', 0), sat = get('Saturation', 0), grain = get('GrainAmount', 0);
+  const warm = Number.isFinite(it) ? it / 100 * 0.06 : Number.isFinite(ta) ? (ta - 5500) / 5000 * 0.05 : 0;
+  const hueRGB = (h, s) => { const a = h / 360 * 2 * Math.PI; return [Math.cos(a), Math.cos(a - 2.094), Math.cos(a + 2.094)].map(v => v * s / 100 * 0.035); };
+  return { contrast: clamp(con / 100 * 0.3, -0.2, 0.35), sat: clamp(1 + (sat + vib * 0.6) / 100 * 0.6, 0.2, 1.6), warm: clamp(warm, -0.08, 0.08), lift: clamp(sh / 100 * 0.05 - bl / 100 * 0.04, -0.06, 0.1), roll: clamp(-hi / 100 * 0.2 - wh / 100 * 0.05, -0.1, 0.3),
+    sh: hueRGB(get('SplitToningShadowHue', get('ColorGradeShadowHue', 0)), get('SplitToningShadowSaturation', get('ColorGradeShadowSat', 0))), hi: hueRGB(get('SplitToningHighlightHue', get('ColorGradeHighlightHue', 0)), get('SplitToningHighlightSaturation', get('ColorGradeHighlightSat', 0))),
+    grain: clamp(grain / 100 * 0.07, 0, 0.08), expo: Math.pow(2, clamp(exp, -3, 3)) };
+}
+function safeLook(l) { const n = (v, a, b, d) => Number.isFinite(+v) ? clamp(+v, a, b) : d; const v3 = (x) => Array.isArray(x) && x.length === 3 ? x.map(y => n(y, -0.03, 0.03, 0)) : [0, 0, 0];
+  return { contrast: n(l?.contrast, -0.2, 0.35, 0.1), sat: n(l?.sat, 0.2, 1.6, 1), warm: n(l?.warm, -0.08, 0.08, 0), lift: n(l?.lift, -0.06, 0.1, 0.02), roll: n(l?.roll, -0.1, 0.3, 0.05), sh: v3(l?.sh), hi: v3(l?.hi), grain: n(l?.grain, 0, 0.08, 0.02) }; }
+function kindOf(name) { const e = (name.split('.').pop() || '').toLowerCase(); if (e === 'cube') return 'lut'; if (e === 'xmp') return 'xmp'; if (['ttf', 'otf', 'woff', 'woff2'].includes(e)) return 'font'; if (['mp3', 'wav', 'm4a', 'aif', 'aiff', 'ogg'].includes(e)) return 'audio'; if (['mp4', 'mov', 'webm', 'm4v'].includes(e)) return 'video'; if (['png', 'jpg', 'jpeg', 'heic', 'webp', 'gif'].includes(e)) return 'image'; if (['drx', 'prfpset', 'lrtemplate', 'dng', 'look', 'acv', '3dl', 'mogrt', 'prproj', 'drp', 'zip'].includes(e)) return 'project'; return 'other'; }
+const KIND_LABEL = { lut: 'LUT', xmp: 'Lightroom', font: 'Font', audio: 'Sound', video: 'Overlay / video', image: 'Image', project: 'Preset / project', other: 'File' };
+function lookOptions() { return [['moody', 'Moody (house)'], ['clean', 'Clean (house)'], ['warm', 'Warm (house)'], ...PRESETS.filter(p => p.kind === 'lut').map(p => ['lut:' + p.id, 'LUT · ' + p.name]), ...PRESETS.filter(p => p.kind === 'xmp').map(p => ['xmp:' + p.id, 'Preset · ' + p.name]), ...METHODS.filter(m => m.look).map(m => ['method:' + m.id, 'Method · ' + m.title])]; }
+async function resolveLook(key) {
+  if (LOOKS[key]) return { look: LOOKS[key], lut: null, expo: 1, name: key };
+  const [kind, id] = String(key).split(':');
+  try {
+    if (kind === 'lut') { const p = PRESETS.find(x => x.id === id); return { look: { ...NEUTRAL, contrast: 0.02, lift: 0.005 }, lut: parseCube(await p.blob.text()), expo: 1, name: p.name }; }
+    if (kind === 'xmp') { const p = PRESETS.find(x => x.id === id); const x = parseXMP(await p.blob.text()); return { look: x, lut: null, expo: x.expo, name: p.name }; }
+    if (kind === 'method') { const m = METHODS.find(x => x.id === id); return { look: safeLook(m.look), lut: null, expo: 1, name: m.title }; }
+  } catch (e) { console.warn('preset failed', e); }
+  return { look: LOOKS.moody, lut: null, expo: 1, name: 'moody' };
+}
+async function loadLibrary() { PRESETS = await allIn('presets'); METHODS = await allIn('methods'); }
+const lookFileTag = k => String(k).replace(/[^\w]+/g, '-').slice(0, 24);
+
+function defaultLook() { try { return localStorage.getItem('sbdnj-default-look') || 'moody'; } catch { return 'moody'; } }
 /* ------------------------------------------------------------------ 1. analysis */
 async function analyzeClip(clip, onStep) {
   const v = videoEl(clip.url); v.muted = true; await loadMeta(v);
@@ -123,12 +168,14 @@ function beatsOf(buf) {
 
 /* ------------------------------------------------------------------ 4. Claude plans the cut */
 function apiKey() { try { return localStorage.getItem('sbdnj-api-key') || ''; } catch { return ''; } }
-async function claude(content, maxTokens = 4000) {
+async function claude(content, maxTokens = 4000, tools) {
   const key = apiKey(); if (!key) { window.__openSettings?.('Add your Anthropic API key so the Editor can plan your cut.'); throw new Error('Add your API key in ⚙ Settings first.'); }
-  const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: maxTokens, messages: [{ role: 'user', content }] }) });
+  const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: maxTokens, messages: [{ role: 'user', content }], ...(tools ? { tools } : {}) }) });
   if (r.status === 401) { window.__openSettings?.('That API key was rejected.'); throw new Error('API key rejected.'); }
   if (!r.ok) throw new Error('Claude error ' + r.status + ' ' + (await r.text()).slice(0, 160));
-  const j = await r.json(); return (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  const j = await r.json(); const txt = (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  if (tools) { const src = []; for (const b of j.content || []) { if (b.type === 'web_search_tool_result' && Array.isArray(b.content)) b.content.forEach(x => x.url && src.push({ title: x.title || x.url, url: x.url })); for (const c of b.citations || []) if (c.url) src.push({ title: c.title || c.url, url: c.url }); } return { text: txt, sources: src.filter((x, i, a) => a.findIndex(y => y.url === x.url) === i).slice(0, 8) }; }
+  return txt;
 }
 function parseJSON(t) { t = t.trim(); try { return JSON.parse(t); } catch {} const f = t.match(/```(?:json)?\s*([\s\S]*?)```/); if (f) try { return JSON.parse(f[1]); } catch {} const a = t.indexOf('{'), b = t.lastIndexOf('}'); return JSON.parse(t.slice(a, b + 1)); }
 function clipSummary(clip, i) {
@@ -161,6 +208,7 @@ Brief from Dag:
 - Keep the funny and important lines with their full setup and punchline. Never cut mid-sentence. Cut every flagged moment.
 - Keep clips in the order sent unless the story flows better another way.
 - Dag's notes: ${o.notes || '(none)'}
+- House methods the crew has researched (follow them): ${METHODS.filter(m => m.on).flatMap(m => m.rules || []).slice(0, 24).join('; ') || '(none yet)'}
 
 Jason Roth is the Director: after planning, he signs off and writes one short director's note on story, pacing and look (what works, what Dag should watch for).
 Reply with ONLY JSON:
@@ -202,7 +250,8 @@ function cleanPlan(job, plan) {
 const VS = `#version 300 es
 in vec2 p; out vec2 uv; void main(){ uv = p*0.5+0.5; gl_Position = vec4(p,0.,1.); }`;
 const FS = `#version 300 es
-precision highp float;
+precision highp float; precision highp sampler3D;
+uniform sampler3D L; uniform float lutMix, lutN;
 uniform sampler2D A, B; uniform float mixAB, gainA, gainB, contrast, sat, warm, lift, roll, grain, time, bars, fade;
 uniform vec2 scA, ofA, scB, ofB; uniform vec3 sh, hi; in vec2 uv; out vec4 o;
 vec3 grade(vec3 c){ c = clamp(c,0.,1.); c *= vec3(1.+warm,1.,1.-warm); c = c + contrast*(c-0.5)*(1.-abs(2.*c-1.))*2.; c = clamp(c,0.,1.);
@@ -210,6 +259,7 @@ vec3 grade(vec3 c){ c = clamp(c,0.,1.); c *= vec3(1.+warm,1.,1.-warm); c = c + c
   float g = dot(c,vec3(.3333)); float s = max(c.r,max(c.g,c.b))-min(c.r,min(c.g,c.b)); float k = sat>1. ? 1.+(sat-1.)*(1.-s) : sat; return clamp(g+(c-g)*k,0.,1.); }
 vec3 tap(sampler2D t, vec2 sc, vec2 of, float gn){ vec2 q = uv*sc+of; return texture(t, vec2(q.x, 1.-q.y)).rgb*gn; }
 void main(){ vec3 c = grade(mix(tap(A,scA,ofA,gainA), tap(B,scB,ofB,gainB), mixAB));
+  if (lutMix > 0.) { vec3 q = clamp(c,0.,1.)*(lutN-1.)/lutN + 0.5/lutN; c = mix(c, texture(L, q).rgb, lutMix); }
   float n = fract(sin(dot(uv*vec2(1234.5,987.6)+time, vec2(12.9898,78.233)))*43758.5453); c += (n-.5)*grain; c *= 1.-fade;
   if (uv.y < bars || uv.y > 1.-bars) c = vec3(0.); o = vec4(c,1.); }`;
 function makeGL(canvas) {
@@ -220,14 +270,19 @@ function makeGL(canvas) {
   const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const tex = [0, 1].map(i => { const t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, t); for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); return t; });
   gl.uniform1i(gl.getUniformLocation(pr, 'A'), 0); gl.uniform1i(gl.getUniformLocation(pr, 'B'), 1);
+  const lutTex = gl.createTexture(); gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_3D, lutTex); for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_3D, k, v);
+  gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 2, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,255, 255,0,0,255, 0,255,0,255, 255,255,0,255, 0,0,255,255, 255,0,255,255, 0,255,255,255, 255,255,255,255])); let lutN = 2;
+  gl.uniform1i(gl.getUniformLocation(pr, 'L'), 2);
   const U = n => gl.getUniformLocation(pr, n);
   return {
-    gl, upload(i, src) { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, tex[i]); try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); } catch {} },
+    gl, setLUT(lut) { gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_3D, lutTex); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1); gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, lut.N, lut.N, lut.N, 0, gl.RGBA, gl.UNSIGNED_BYTE, lut.data); lutN = lut.N; },
+    upload(i, src) { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, tex[i]); try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); } catch {} },
     draw(u) { gl.viewport(0, 0, canvas.width, canvas.height); const L = u.look;
       gl.uniform1f(U('mixAB'), u.mix); gl.uniform1f(U('gainA'), u.gainA); gl.uniform1f(U('gainB'), u.gainB);
       gl.uniform2f(U('scA'), ...u.scA); gl.uniform2f(U('ofA'), ...u.ofA); gl.uniform2f(U('scB'), ...u.scB); gl.uniform2f(U('ofB'), ...u.ofB);
       gl.uniform1f(U('contrast'), L.contrast); gl.uniform1f(U('sat'), L.sat); gl.uniform1f(U('warm'), L.warm); gl.uniform1f(U('lift'), L.lift); gl.uniform1f(U('roll'), L.roll);
       gl.uniform3f(U('sh'), ...L.sh); gl.uniform3f(U('hi'), ...L.hi); gl.uniform1f(U('grain'), u.grain ?? L.grain); gl.uniform1f(U('time'), u.time % 100); gl.uniform1f(U('bars'), u.bars); gl.uniform1f(U('fade'), u.fade);
+      gl.uniform1f(U('lutMix'), u.lutMix || 0); gl.uniform1f(U('lutN'), lutN);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); },
   };
 }
@@ -238,7 +293,7 @@ async function renderEdit(job, { record, quality, onProgress, canvasOut, signal 
   const W = Math.round(F.w * scale / 2) * 2, Hh = Math.round(F.h * scale / 2) * 2;
   const glc = document.createElement('canvas'); glc.width = W; glc.height = Hh; const R = makeGL(glc);
   const out = canvasOut || document.createElement('canvas'); out.width = W; out.height = Hh; const g = out.getContext('2d');
-  const look = LOOKS[job.opts.look];
+  const RL = await resolveLook(job.opts.look); const look = RL.look; if (RL.lut) R.setLUT(RL.lut);
   const ctx = new (window.AudioContext || window.webkitAudioContext)(); await ctx.resume();
   const bus = ctx.createGain(); bus.gain.value = 0.8; const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -10; comp.ratio.value = 3; bus.connect(comp);
   const dest = ctx.createMediaStreamDestination(); comp.connect(dest); if (!record) comp.connect(ctx.destination);
@@ -298,7 +353,7 @@ async function renderEdit(job, { record, quality, onProgress, canvasOut, signal 
       const prevSeg = segs[i - 1];
       if (xf && prevSeg && prevSeg.clip !== s.clip && now - starts[i] < xf) { const pp = players[prevSeg.clip], pc = job.clips[prevSeg.clip]; R.upload(1, pp.v); [scB, ofB] = cover(pc.w, pc.h, W, Hh); gainB = pc.gain; mix = 1 - clamp((now - starts[i]) / xf, 0, 1); }
       const fade = Math.max(now < 0.6 ? 1 - now / 0.6 : 0, now > total - 1.2 ? (now - (total - 1.2)) / 1.2 : 0);
-      R.draw({ look, mix, gainA: c.gain, gainB, scA, ofA, scB, ofB, bars: FORMATS[job.opts.format].bars, fade, time: now });
+      R.draw({ look, mix, gainA: c.gain * RL.expo, gainB: gainB * RL.expo, lutMix: RL.lut ? 1 : 0, scA, ofA, scB, ofB, bars: FORMATS[job.opts.format].bars, fade, time: now });
       g.drawImage(glc, 0, 0);
       // title: clean serif, fades in and out over the first ~4 s
       if (job.title && now < 4.6) { const a = Math.min(clamp((now - 0.5) / 0.8, 0, 1), clamp((4.4 - now) / 0.8, 0, 1)); g.save(); g.globalAlpha = a; g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = W * 0.02; g.font = `600 ${Math.round(Math.min(W, Hh) * 0.105)}px ${titleFont}`; g.fillText(job.title, W / 2, Hh / 2); g.restore(); }
@@ -319,14 +374,15 @@ async function renderEdit(job, { record, quality, onProgress, canvasOut, signal 
 }
 
 /* ------------------------------------------------------------------ photos: grade + 4:5 crop */
-async function gradePhoto(file, look) {
+async function gradePhoto(file, lookKey) {
+  const RL = await resolveLook(lookKey);
   const url = URL.createObjectURL(file); const img = new Image(); img.src = url; await img.decode();
   const maxSide = 4096, k = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
   const W = Math.round(img.naturalWidth * k), Hh = Math.round(img.naturalHeight * k);
-  const c = document.createElement('canvas'); c.width = W; c.height = Hh; const R = makeGL(c); R.upload(0, img);
+  const c = document.createElement('canvas'); c.width = W; c.height = Hh; const R = makeGL(c); R.upload(0, img); if (RL.lut) R.setLUT(RL.lut);
   // exposure balance from a tiny thumbnail
   const t = document.createElement('canvas'); t.width = 64; t.height = 64; const tg = t.getContext('2d'); tg.drawImage(img, 0, 0, 64, 64); const d = tg.getImageData(0, 0, 64, 64).data; let m = 0; for (let i = 0; i < d.length; i += 4) m += (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255; m /= 4096;
-  R.draw({ look: LOOKS[look], mix: 0, gainA: clamp(0.47 / Math.max(0.08, m), 0.8, 1.3), gainB: 1, scA: [1, 1], ofA: [0, 0], scB: [1, 1], ofB: [0, 0], bars: 0, fade: 0, time: 1, grain: LOOKS[look].grain * 0.6 });
+  R.draw({ look: RL.look, lutMix: RL.lut ? 1 : 0, mix: 0, gainA: clamp(0.47 / Math.max(0.08, m), 0.8, 1.3) * RL.expo, gainB: 1, scA: [1, 1], ofA: [0, 0], scB: [1, 1], ofB: [0, 0], bars: 0, fade: 0, time: 1, grain: (RL.look.grain || 0.02) * 0.6 });
   // 4:5 feed crop (center)
   const fw = Math.min(W, Math.round(Hh * 0.8)), fh = Math.round(fw * 1.25) > Hh ? Hh : Math.round(fw * 1.25);
   const crop = document.createElement('canvas'); crop.width = Math.min(1080, fw); crop.height = Math.round(crop.width * 1.25); crop.getContext('2d').drawImage(c, (W - fw) / 2, (Hh - fh) / 2, fw, fh, 0, 0, crop.width, crop.height);
@@ -374,7 +430,7 @@ export async function editPane(pane) {
     <label class="note" for="eClips">Clips and/or photos (in order)</label><input id="eClips" type="file" multiple accept="video/*,image/*">
     <label class="note" for="eMusic">Song (optional, mp3/m4a)</label><input id="eMusic" type="file" accept="audio/*">
     <div class="row"><select id="eFormat" aria-label="Format"><option value="reel">Reel 9:16</option><option value="film">Film 16:9 + 2.39 bars</option><option value="square">Feed 4:5</option></select>
-      <select id="eLook" aria-label="Look"><option value="moody">Moody</option><option value="clean">Clean</option><option value="warm">Warm</option></select>
+      <select id="eLook" aria-label="Look">${lookOptions().map(([v, l]) => `<option value="${esc(v)}"${v === defaultLook() ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>
       <select id="eLen" aria-label="Length"><option value="auto">Length: auto</option><option value="15">15 s</option><option value="30">30 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="180">3 min</option></select>
       <select id="eTrans" aria-label="Transitions"><option value="cut">Clean cuts</option><option value="dissolve">Soft dissolves</option></select></div>
     <input id="eTitle" maxlength="60" placeholder="Title at the start (optional)">
@@ -415,7 +471,7 @@ async function startJob() {
   try {
     if (photos.length) {
       setStage('analyze', `Grading ${photos.length} photo(s) to the ${opts.look} look`); crew('photoeditor', `Grading ${photos.length} photos to the ${opts.look} look`); crew('retoucher', 'Checking each photo');
-      for (const [i, f] of photos.entries()) { const { feed } = await gradePhoto(f, opts.look); const name = f.name.replace(/\.[^.]+$/, '') + `_${opts.look}_4x5.jpg`; await saveFinished({ id: 'p' + Date.now() + i, kind: 'photo', blob: feed, file: name, title: `${f.name} · ${opts.look}`, at: Date.now() }); state.progress = (i + 1) / photos.length; paint(); }
+      for (const [i, f] of photos.entries()) { const { feed } = await gradePhoto(f, opts.look); const name = f.name.replace(/\.[^.]+$/, '') + `_${lookFileTag(opts.look)}_4x5.jpg`; await saveFinished({ id: 'p' + Date.now() + i, kind: 'photo', blob: feed, file: name, title: `${f.name} · ${(lookOptions().find(o => o[0] === opts.look) || [0, opts.look])[1]}`, at: Date.now() }); state.progress = (i + 1) / photos.length; paint(); }
       crewDone(['photoeditor', 'retoucher']); say(`<b>Photo Editor</b> graded ${photos.length} photo(s) to the ${opts.look} look`);
       await refreshFinished();
       if (!vids.length) { setStage('done', `${photos.length} photo(s) graded. Tap Save / Share to put them in your camera roll or post them.`); return; }
@@ -494,6 +550,80 @@ function openBay(label) {
 }
 function closeBay() { const b = $('#editBay'); if (b) b.hidden = true; }
 
+/* ------------------------------------------------------------------ Presets & Methods tab */
+const pstate = { busy: '', err: '', researching: '' };
+async function storageLine() { try { const e = await navigator.storage?.estimate?.(); const p = await navigator.storage?.persisted?.(); if (!e) return ''; const gb = x => (x / 1e9).toFixed(x > 1e9 ? 1 : 2) + ' GB'; return `Using ${gb(e.usage || 0)} of ${gb(e.quota || 0)} on this device${p ? ' · protected from auto-clean' : ''}`; } catch { return ''; } }
+function mb(n) { return n > 1e9 ? (n / 1e9).toFixed(2) + ' GB' : (n / 1e6).toFixed(1) + ' MB'; }
+async function importPresets(files) {
+  try { await navigator.storage?.persist?.(); } catch {}
+  crew('lookdev', `Loading ${files.length} preset file${files.length > 1 ? 's' : ''} into the library`, 60000);
+  for (const f of files) {
+    pstate.busy = `Saving ${f.name} (${mb(f.size)})…`; paintP();
+    const kind = kindOf(f.name); const item = { id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: f.name.replace(/\.[^.]+$/, ''), file: f.name, kind, size: f.size, type: f.type, at: Date.now(), by: (localStorage.getItem('sbdnj-name') || '').trim() || 'Dag', blob: f };
+    try { if (kind === 'lut') { const L = parseCube(await f.text()); item.info = `${L.N}×${L.N}×${L.N} cube · applied for real in the grade`; }
+      if (kind === 'xmp') { const x = parseXMP(await f.text()); item.info = `Converted: contrast ${x.contrast.toFixed(2)}, saturation ${x.sat.toFixed(2)}, warmth ${x.warm.toFixed(3)}, exposure ×${x.expo.toFixed(2)}`; }
+      await putIn('presets', item);
+    } catch (e) { pstate.err = `${f.name}: ${e.message || e}`; if (e?.name === 'QuotaExceededError') pstate.err = `${f.name}: this device is out of room for the app. Free up space or keep that file in Drive.`; }
+  }
+  pstate.busy = ''; crewDone(['lookdev']); await loadLibrary(); paintP();
+}
+async function researchMethod(topic) {
+  pstate.researching = topic; pstate.err = ''; paintP(); crew('jason', `Researching: ${topic}`, 300000); crew('lookdev', 'Pulling references for a new method', 300000);
+  const prompt = `You are Jason Roth, director at @shotbydnj, a premium cinematic photo/video studio (moody, warm, clean house looks; never meme-y). Research this editing / photography / color technique and turn it into something the studio's auto-editor can follow:
+
+"${topic}"
+
+Use current, credible sources (pro colorists, editors, cinematographers). Return ONLY JSON:
+{"title": short name, "summary": 2 sentences, "steps": [concrete steps a human editor would do, max 8], "edit_rules": [short rules the auto-editor follows when choosing and timing shots, max 6, e.g. "hold wide establishing shots 2-3s before cutting in"], "look": null OR {"contrast": -0.2..0.35, "sat": 0.2..1.6, "warm": -0.08..0.08, "lift": -0.06..0.1, "roll": -0.1..0.3, "sh": [r,g,b each -0.03..0.03 shadow tint], "hi": [r,g,b highlight tint], "grain": 0..0.08} only if the technique is a color look}`;
+  try {
+    let out, web = true;
+    try { out = await claude([{ type: 'text', text: prompt }], 3000, [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }]); }
+    catch (e) { web = false; out = { text: await claude([{ type: 'text', text: prompt + '\n\n(Web search is unavailable: answer from your own knowledge.)' }], 3000), sources: [] }; }
+    const j = parseJSON(out.text);
+    const m = { id: 'm' + Date.now().toString(36), topic, title: String(j.title || topic).slice(0, 60), summary: String(j.summary || ''), steps: (j.steps || []).map(String).slice(0, 8), rules: (j.edit_rules || []).map(String).slice(0, 6), look: j.look ? safeLook(j.look) : null, sources: out.sources, web: web && out.sources.length > 0, on: true, at: Date.now() };
+    await putIn('methods', m); await loadLibrary();
+  } catch (e) { pstate.err = 'Research failed: ' + (e.message || e); }
+  pstate.researching = ''; crewDone(['jason', 'lookdev']); paintP();
+}
+function paintP() { const p = $('#pane'); if (p && H()?.currentTab?.() === 'presets') presetsPane(p); }
+export async function presetsPane(pane) {
+  await loadLibrary(); const st = await storageLine();
+  const groups = {}; PRESETS.forEach(p => (groups[p.kind] ||= []).push(p));
+  const presetCard = p => `<div class="card" data-pid="${p.id}"><div class="top"><span class="who">${esc(p.name)}</span><span class="note">${KIND_LABEL[p.kind]} · ${mb(p.size)}</span></div>
+      <span class="note">${esc(p.file)} · added by ${esc(p.by)} · ${new Date(p.at).toLocaleDateString()}${p.info ? '<br>' + esc(p.info) : ''}</span>
+      <div class="row">${['lut', 'xmp'].includes(p.kind) ? `<button class="primary" data-default="${p.kind}:${p.id}">${defaultLook() === p.kind + ':' + p.id ? '✓ Default look' : 'Make default look'}</button>` : ''}<button data-dl>Download</button><button data-pdel>Delete</button></div></div>`;
+  const methodCard = m => `<div class="card" data-mid="${m.id}"><div class="top"><span class="who">${esc(m.title)}</span><label class="note"><input type="checkbox" data-on ${m.on ? 'checked' : ''}> use in edits</label></div>
+      <span class="note">${esc(m.summary)}</span>
+      ${m.steps.length ? `<span class="eyebrow">How to do it</span>${m.steps.map((x, i) => `<span class="note">${i + 1}. ${esc(x)}</span>`).join('')}` : ''}
+      ${m.rules.length ? `<span class="eyebrow">Rules the editor follows</span>${m.rules.map(x => `<span class="note">• ${esc(x)}</span>`).join('')}` : ''}
+      ${m.look ? `<span class="note">Includes a grade: pick “Method · ${esc(m.title)}” as the look.</span>` : ''}
+      <span class="note">${m.web ? 'Researched on the web:' : 'From Claude’s own knowledge (no live web search on this key).'}</span>
+      ${m.sources.map(x => `<a class="note" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title.slice(0, 70))}</a>`).join('')}
+      <div class="row"><button data-mdel>Delete</button></div></div>`;
+  pane.innerHTML = `<span class="eyebrow">Presets & methods · Jason + Look Dev</span><h2>Presets library</h2>
+    <p class="note">Drop LUTs, Lightroom presets, fonts, sound effects, overlays or project files. LUTs (.cube) are applied for real in the edit's color grade. Lightroom presets (.xmp) are converted into a look. Everything else is kept here, any size, for reference.</p>
+    ${pstate.err ? `<p class="note" style="color:#E07A6A">${esc(pstate.err)}</p>` : ''}
+    <label class="note" for="pFiles">Add files</label><input id="pFiles" type="file" multiple>
+    ${pstate.busy ? `<p class="note">${esc(pstate.busy)}</p>` : ''}
+    <p class="note">${esc(st)}</p>
+    ${Object.keys(KIND_LABEL).filter(k => groups[k]).map(k => `<span class="eyebrow">${({ lut: 'LUTs', xmp: 'Lightroom presets', font: 'Fonts', audio: 'Sounds', video: 'Overlays & video', image: 'Images', project: 'Presets & project files', other: 'Other files' })[k]} · ${groups[k].length}</span>${groups[k].map(presetCard).join('')}`).join('') || '<p class="note">No presets yet.</p>'}
+    <h2 style="margin-top:18px">Research a method</h2>
+    <p class="note">Name a technique and Jason researches it, writes the steps, and turns it into rules every edit follows. Switch a method off to stop using it.</p>
+    <div class="row"><input id="mTopic" type="text" placeholder="e.g. teal-orange golden hour hiking grade, J-cuts for vlogs" style="flex:1" ${pstate.researching ? 'disabled' : ''}><button class="primary" id="mGo" ${pstate.researching ? 'disabled' : ''}>${pstate.researching ? 'Researching…' : 'Research'}</button></div>
+    ${pstate.researching ? `<p class="note">Jason is researching “${esc(pstate.researching)}”. This takes about a minute.</p>` : ''}
+    ${METHODS.map(methodCard).join('') || '<p class="note">No methods yet.</p>'}`;
+  $('#pFiles', pane).onchange = e => { const fs = [...e.target.files]; pstate.err = ''; if (fs.length) importPresets(fs); };
+  const go = () => { const t = $('#mTopic', pane).value.trim(); if (t && !pstate.researching) researchMethod(t); };
+  $('#mGo', pane).onclick = go; $('#mTopic', pane).onkeydown = e => { if (e.key === 'Enter') go(); };
+  pane.querySelectorAll('[data-pid]').forEach(card => { const p = PRESETS.find(x => x.id === card.dataset.pid);
+    card.querySelector('[data-default]')?.addEventListener('click', ev => { try { localStorage.setItem('sbdnj-default-look', ev.target.dataset.default); } catch {} paintP(); });
+    card.querySelector('[data-dl]').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(p.blob); a.download = p.file; a.click(); };
+    card.querySelector('[data-pdel]').onclick = async () => { await delIn('presets', p.id); if (defaultLook().endsWith(p.id)) try { localStorage.removeItem('sbdnj-default-look'); } catch {} paintP(); }; });
+  pane.querySelectorAll('[data-mid]').forEach(card => { const m = METHODS.find(x => x.id === card.dataset.mid);
+    card.querySelector('[data-on]').onchange = async ev => { m.on = ev.target.checked; await putIn('methods', m); };
+    card.querySelector('[data-mdel]').onclick = async () => { await delIn('methods', m.id); paintP(); }; });
+}
+
 // boot: add the Edit tab
 (async () => {
   await refreshFinished();
@@ -504,6 +634,10 @@ function closeBay() { const b = $('#editBay'); if (b) b.hidden = true; }
   const tabs = document.querySelector('.tabs'); if (!tabs) return;
   const b = document.createElement('button'); b.setAttribute('role', 'tab'); b.dataset.tab = 'edit'; b.setAttribute('aria-selected', 'false'); b.textContent = 'Edit'; tabs.insertBefore(b, tabs.firstChild);
   b.addEventListener('click', () => { document.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', String(x === b))); H()?.setTab?.('edit'); });
-  window.__extraTabs = { edit: editPane };
+  const bp = document.createElement('button'); bp.setAttribute('role', 'tab'); bp.dataset.tab = 'presets'; bp.setAttribute('aria-selected', 'false'); bp.textContent = 'Presets'; tabs.insertBefore(bp, b.nextSibling);
+  bp.addEventListener('click', () => { document.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', String(x === bp))); H()?.setTab?.('presets'); });
+  window.__extraTabs = { edit: editPane, presets: presetsPane };
+  await loadLibrary();
   if (state.finished[0]?.kind === 'video') H()?.showFinished?.(URL.createObjectURL(state.finished[0].blob), state.finished[0].title);
 })();
+window.__edit = { gradePhoto, resolveLook, parseXMP };
