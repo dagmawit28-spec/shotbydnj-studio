@@ -87,6 +87,10 @@ function viewLearning() {
     <span class="note">When the studio learns enough in one area, it hires a specialist. You'll see them at the back of the Editing Bullpen.</span>
     ${(lab.hires || []).map(x => `<div class="card"><div class="top"><span class="who">${esc(x.name)}</span><span class="when">Hired ${esc(x.hired)}</span></div>
       <span class="note">${esc(x.role)}</span><span>${esc(x.why)}</span></div>`).join('')}
+    ${lab.library ? `<div class="card"><span class="who">Your Drive library</span>
+      <span>${lab.library.photos} photos · ${lab.library.videos} videos${lab.library.other ? ` · ${lab.library.other} other` : ''}</span>
+      ${(lab.library.recent || []).length ? `<span class="note">Newest: ${lab.library.recent.slice(0, 5).map(esc).join(', ')}</span>` : '<span class="note">Drop photos and videos in the "1 · Drop new stuff here" folder. The studio sorts them every night.</span>'}
+      <span class="note">${lab.library.last_sorted ? 'Last sorted ' + esc(lab.library.last_sorted) + ' · ' : ''}<a href="${esc(safe(lab.library.drive_folder))}" target="_blank" rel="noopener" style="color:inherit">Open the Drive folder</a></span></div>` : ''}
     <span class="eyebrow">Daily breakdown</span>
     ${(lab.reports || []).slice(0, 7).map(x => `<div class="card"><div class="top"><span class="who">${esc(x.headline)}</span><span class="when">${esc(x.date)}</span></div>
       ${x.added?.length ? `<span><b>Hired:</b> ${x.added.map(esc).join(', ')}</span>` : '<span class="note">No new hires</span>'}

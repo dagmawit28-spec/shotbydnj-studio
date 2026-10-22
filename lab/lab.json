@@ -1179,5 +1179,13 @@
     ]
    }
   ]
+ },
+ "library": {
+  "drive_folder": "https://drive.google.com/drive/folders/1JJud3YWMvYIGQLSgFX1efsMvHqmOWT2Q",
+  "photos": 0,
+  "videos": 0,
+  "other": 0,
+  "last_sorted": "",
+  "recent": []
  }
 }
