@@ -15,7 +15,7 @@
 (() => {
   window.__STANDALONE = true;
   const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
-  // ---------- tiny IndexedDB blob store for Drop Zone files ----------
+  // ---------- tiny IndexedDB blob store for My Media files ----------
   const idb = new Promise((res) => { try { const r = indexedDB.open('sbdnj-hq', 1); r.onupgradeneeded = () => r.result.createObjectStore('blobs'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch { res(null); } });
   const URLS = {}; window.__blobURL = id => URLS[id];
   const blobReady = idb.then(db => new Promise(res => { if (!db) return res(); const tx = db.transaction('blobs', 'readonly'); const st = tx.objectStore('blobs'); const req = st.openCursor(); req.onsuccess = () => { const c = req.result; if (c) { URLS[c.key] = URL.createObjectURL(c.value); c.continue(); } else res(); }; req.onerror = () => res(); }));
@@ -77,7 +77,7 @@
         <label class="note" for="apiKey">Anthropic API key (for Andy and crew briefs). It stays only on this device.</label>
         <input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…">
         <div class="row"><button class="primary" id="saveKey">Save</button><button id="clearKey">Remove key</button><button id="closeSet">Close</button></div>
-        <span class="note">Kudos and Drop Zone files are saved on this device. Get a key at console.anthropic.com.</span></div>`;
+        <span class="note">Kudos and My Media files are saved on this device. Get a key at console.anthropic.com.</span></div>`;
       document.body.appendChild(m);
       m.querySelector('#saveKey').onclick = () => { const v = m.querySelector('#apiKey').value.trim(); try { localStorage.setItem('sbdnj-api-key', v); } catch {} m.querySelector('#setMsg').textContent = v ? 'Saved.' : 'Key is empty.'; };
       m.querySelector('#clearKey').onclick = () => { try { localStorage.removeItem('sbdnj-api-key'); } catch {} m.querySelector('#apiKey').value = ''; m.querySelector('#setMsg').textContent = 'Key removed.'; };
@@ -244,7 +244,7 @@ details.grp[open]>summary::before{content:'▾ '}
   <div class="tabs" role="tablist">
     <button role="tab" data-tab="crew" aria-selected="true">Crew</button>
     <button role="tab" data-tab="brief" aria-selected="false">Brief the crew</button>
-    <button role="tab" data-tab="drop" aria-selected="false">Drop Zone</button>
+    <button role="tab" data-tab="drop" aria-selected="false">My Media</button>
   </div>
   <div class="pane" id="pane"></div>
 </aside>
@@ -1652,7 +1652,7 @@ const finVideo = document.createElement('video'); finVideo.muted = true; finVide
 try { const b64 = document.getElementById('finished-data').textContent.trim().split(',')[1]; const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); finVideo.src = URL.createObjectURL(new Blob([u], { type: 'video/mp4' })); } catch (e) { console.warn('finished clip unavailable', e); }
 const tryPlay = () => finVideo.play().catch(() => {}); tryPlay(); window.addEventListener('pointerdown', tryPlay, { once: true });
 let finCustom = null;
-// ---- Big-screen playlist: your finished edit first, then everything tagged "Posted" in the Drop Zone ----
+// ---- Big-screen playlist: your finished edit first, then everything tagged "Posted" in the My Media ----
 const WALL = { items: [], i: -1, until: 0, img: null, vid: document.createElement('video'), key: '' };
 WALL.vid.muted = true; WALL.vid.playsInline = true; WALL.vid.setAttribute('playsinline', '');
 const assetSrc = id => (window.__blobURL && window.__blobURL(id)) || '/_blob/' + id;
@@ -1702,7 +1702,7 @@ function drawFinished(t) {
   const scr = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 1.42), finMat); scr.position.set(-6.8, 1.9, 2.845); scr.rotation.y = Math.PI; hq.add(scr); }
 
 /* =========================================================================
-   SIDE PANEL: Crew live · Brief the crew · Drop Zone
+   SIDE PANEL: Crew live · Brief the crew · My Media
    ========================================================================= */
 const pane = document.getElementById('pane'); let tab = 'crew';
 let sample = null, db = null, assets = null, drops = [], dropFilter = 'All', uploading = false, briefReplies = [], briefBusy = false;
@@ -1710,11 +1710,11 @@ document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click',
 document.getElementById('sideToggle').addEventListener('click', () => document.getElementById('side').classList.toggle('collapsed'));
 document.getElementById('lblToggle').addEventListener('click', e => { showLabels = !showLabels; e.currentTarget.setAttribute('aria-pressed', String(showLabels)); if (!showLabels) PEOPLE.forEach(p => p.el.style.display = 'none'); });
 if (window.innerWidth <= 860) document.getElementById('side').classList.add('collapsed');
-const SUBTABS = { crew: [['crew', 'Live floor'], ['brief', 'Brief the crew']], edit: [['edit', 'Edit'], ['presets', 'Presets']] };
-const GROUP_OF = { crew: 'crew', brief: 'crew', edit: 'edit', presets: 'edit' };
+const SUBTABS = { crew: [['crew', 'Live floor'], ['brief', 'Brief the crew']], edit: [['edit', 'Edit'], ['presets', 'Presets'], ['drop', 'My Media']] };
+const GROUP_OF = { crew: 'crew', brief: 'crew', edit: 'edit', presets: 'edit', drop: 'edit' };
 function subRow() {
   const g = GROUP_OF[tab];
-  document.querySelectorAll('.tabs [data-tab]').forEach(b => { const t = b.dataset.tab; if (t === 'brief' || t === 'presets') { b.hidden = true; return; } b.setAttribute('aria-selected', String(t === (g || tab))); });
+  document.querySelectorAll('.tabs [data-tab]').forEach(b => { const t = b.dataset.tab; if (t === 'brief' || t === 'presets' || t === 'drop') { b.hidden = true; return; } b.setAttribute('aria-selected', String(t === (g || tab))); });
   if (!g || pane.firstElementChild?.classList.contains('subtabs')) return;
   const row = document.createElement('div'); row.className = 'subtabs';
   row.innerHTML = SUBTABS[g].map(([k, n]) => `<button data-sub="${k}" aria-pressed="${k === tab}">${n}</button>`).join('');
@@ -1810,11 +1810,11 @@ function paneDrop() {
   const tiles = shown.map(d => { const src = (window.__blobURL && window.__blobURL(d.asset)) || '/_blob/' + d.asset; const media = d.type === 'video' ? `<video src="${esc(src)}" muted playsinline preload="metadata" controls></video>` : `<img src="${esc(src)}" alt="${esc(d.name)}" loading="lazy">`;
     return `<div class="card" data-did="${esc(d.id)}">${media}<span style="word-break:break-all">${esc(d.name.slice(0, 40))}</span><span class="when">${esc(ago(d.at))}${d.note ? ' · ' + esc(d.note) : ''}</span>
       ${assets ? `<select data-status aria-label="Status">${STATUSES.map(x => `<option${x === d.status ? ' selected' : ''}>${x}</option>`).join('')}</select><button data-del>Delete</button><div data-conf></div>` : `<span class="tag" style="align-self:flex-start">${esc(d.status)}</span>`}</div>`; }).join('');
-  pane.innerHTML = `<span class="eyebrow" style="color:var(--cool)">Drop Zone · AI-free</span><h2>Content for @shotbydnj</h2>
-    <p class="note">Files here stay on this page only. <b>Nothing in the Drop Zone is sent to Claude or the crew.</b> Tag a photo or video <b>Posted</b> and it plays on the big screens as your Instagram wall.</p>
+  pane.innerHTML = `<span class="eyebrow" style="color:var(--cool)">My Media · AI-free</span><h2>Content for @shotbydnj</h2>
+    <p class="note">Files here stay on this page only. <b>Nothing in the My Media is sent to Claude or the crew.</b> Tag a photo or video <b>Posted</b> and it plays on the big screens as your Instagram wall.</p>
     ${assets ? `<label for="dFiles" class="dropbox" id="dTarget"><b>Drop photos or videos</b><span class="note">${window.__STANDALONE ? "or tap to pick · any photo or video from your phone (HEIC, JPG, MOV, MP4…)" : "or click to pick · JPG, PNG, WebP, MP4, WebM · up to 20 MB each"}</span></label>
       <input type="file" id="dFiles" multiple accept="${window.__STANDALONE ? "image/*,video/*" : "image/jpeg,image/png,image/webp,video/mp4,video/webm"}" hidden>
-      <input id="dNote" maxlength="200" placeholder="Optional note, e.g. Rainier hike, July"><p class="note" id="dMsg"></p>` : `<p class="note">${db ? 'Only you (and editors) can add files.' : 'The Drop Zone is unavailable on this device.'}</p>`}
+      <input id="dNote" maxlength="200" placeholder="Optional note, e.g. Rainier hike, July"><p class="note" id="dMsg"></p>` : `<p class="note">${db ? 'Only you (and editors) can add files.' : 'The My Media is unavailable on this device.'}</p>`}
     <div class="row">${['All', ...STATUSES].map(x => `<button data-filter="${x}" aria-pressed="${x === dropFilter}">${x} ${x === 'All' ? drops.length : drops.filter(d => d.status === x).length}</button>`).join('')}</div>
     ${tiles ? `<div class="media">${tiles}</div>` : `<p class="note">${drops.length ? 'Nothing with this status.' : 'No files yet. Each file gets a Raw / Picked / Posted status so you can track what made it to the feed.'}</p>`}`;
   pane.querySelectorAll('[data-filter]').forEach(b => b.addEventListener('click', () => { dropFilter = b.dataset.filter; paneDrop(); }));
